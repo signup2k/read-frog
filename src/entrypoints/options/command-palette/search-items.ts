@@ -311,29 +311,6 @@ export const SEARCH_ITEMS: SearchItem[] = [
     pageKey: "options.overlayTools.contextMenu.title",
   },
 
-  // Input Translation page
-  {
-    sectionId: "input-translation-toggle",
-    route: "/input-translation",
-    titleKey: "options.inputTranslation.toggle.title",
-    descriptionKey: "options.inputTranslation.toggle.description",
-    pageKey: "options.overlayTools.inputTranslation.title",
-  },
-  {
-    sectionId: "input-translation-threshold-section",
-    route: "/input-translation",
-    titleKey: "options.inputTranslation.threshold.title",
-    descriptionKey: "options.inputTranslation.threshold.description",
-    pageKey: "options.overlayTools.inputTranslation.title",
-  },
-  {
-    sectionId: "input-translation-languages",
-    route: "/input-translation",
-    titleKey: "options.inputTranslation.languages.title",
-    descriptionKey: "options.inputTranslation.languages.description",
-    pageKey: "options.overlayTools.inputTranslation.title",
-  },
-
   // Video Subtitles page
   {
     sectionId: "subtitles-config",

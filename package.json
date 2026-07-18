@@ -89,7 +89,6 @@
     "@wxt-dev/i18n": "^0.2.6",
     "ai": "^7.0.31",
     "ai-sdk-ollama": "^4.0.0",
-    "better-auth": "^1.6.23",
     "case-anything": "^3.1.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

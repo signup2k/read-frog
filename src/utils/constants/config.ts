@@ -153,9 +153,6 @@ export const DEFAULT_CONFIG: Config = {
       },
     },
     customActions: defaultDictionaryAction ? [defaultDictionaryAction] : [],
-    saveSuggestion: {
-      enabled: true,
-    },
   },
   sideContent: {
     width: DEFAULT_SIDE_CONTENT_WIDTH,
@@ -165,14 +162,6 @@ export const DEFAULT_CONFIG: Config = {
   },
   contextMenu: {
     enabled: true,
-  },
-  inputTranslation: {
-    enabled: true,
-    providerId: "microsoft-translate-default",
-    fromLang: "targetCode",
-    toLang: "sourceCode",
-    enableCycle: false,
-    timeThreshold: 300,
   },
   videoSubtitles: {
     enabled: true,

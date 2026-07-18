@@ -50,7 +50,10 @@ import { sendMessage } from "@/utils/message"
 import { removeReactShadowHost } from "@/utils/react-shadow-host/create-shadow-host"
 import { isTranslationCancelledError } from "@/utils/request/cancellation"
 import { createWorkPacer } from "@/utils/scheduler"
-import { getEffectiveSiteRule } from "@/utils/site-rules/effective"
+import {
+  getEffectivePageTranslationConfig,
+  getEffectiveSiteRule,
+} from "@/utils/site-rules/effective"
 
 type SimpleIntersectionOptions = Omit<IntersectionObserverInit, "threshold"> & {
   threshold?: number
@@ -155,8 +158,8 @@ export class PageTranslationManager implements IPageTranslationManager {
 
     const trackedContext = window === window.top ? analyticsContext : undefined
 
-    const config = await getLocalConfig()
-    if (!config) {
+    const globalConfig = await getLocalConfig()
+    if (!globalConfig) {
       console.warn("Config is not initialized")
       if (trackedContext) {
         void trackFeatureUsed({
@@ -166,6 +169,7 @@ export class PageTranslationManager implements IPageTranslationManager {
       }
       return
     }
+    const config = getEffectivePageTranslationConfig(globalConfig, window.location.href)
 
     if (
       !validateTranslationConfigAndToast({
@@ -221,11 +225,15 @@ export class PageTranslationManager implements IPageTranslationManager {
         void (async () => {
           // One config read per callback batch — a dense first intersection
           // can deliver hundreds of entries at once (#1881).
-          const currentConfig = await getLocalConfig()
-          if (!currentConfig) {
+          const latestGlobalConfig = await getLocalConfig()
+          if (!latestGlobalConfig) {
             logger.error("Global config is not initialized")
             return
           }
+          const currentConfig = getEffectivePageTranslationConfig(
+            latestGlobalConfig,
+            window.location.href,
+          )
           if (this.walkId !== walkId) return
           // One shared pacer bounds the batch's synchronous expansion work;
           // the liveness check stops paced expansion promptly if the user
@@ -530,7 +538,12 @@ export class PageTranslationManager implements IPageTranslationManager {
     const walkId = this.walkId
     if (!walkId || !observer) return
 
-    const config = existingConfig ?? (await getLocalConfig())
+    const latestGlobalConfig = existingConfig ? null : await getLocalConfig()
+    const config =
+      existingConfig ??
+      (latestGlobalConfig
+        ? getEffectivePageTranslationConfig(latestGlobalConfig, window.location.href)
+        : null)
     if (!config) {
       logger.error("Global config is not initialized")
       return
@@ -819,11 +832,12 @@ export class PageTranslationManager implements IPageTranslationManager {
     const needsTraversalHandling = hostRecords.some((record) => record.type !== "characterData")
     if (staleTranslatedSources.size === 0 && !needsTraversalHandling) return
 
-    const config = await getLocalConfig()
-    if (!config) {
+    const latestGlobalConfig = await getLocalConfig()
+    if (!latestGlobalConfig) {
       logger.error("Global config is not initialized")
       return
     }
+    const config = getEffectivePageTranslationConfig(latestGlobalConfig, window.location.href)
     if (!this.isPageTranslating || this.translationSessionVersion !== sessionVersion) return
 
     for (const rec of hostRecords) {
@@ -950,8 +964,9 @@ export class PageTranslationManager implements IPageTranslationManager {
     if (!this.isPageTranslating || this.translationSessionVersion !== sessionVersion) return
     // No pending mutation version means the source converged in the meantime.
     if (this.translatedSourceMutationVersions.get(source) === undefined) return
-    const config = await getLocalConfig()
-    if (!config) return
+    const latestGlobalConfig = await getLocalConfig()
+    if (!latestGlobalConfig) return
+    const config = getEffectivePageTranslationConfig(latestGlobalConfig, window.location.href)
     if (!this.isPageTranslating || this.translationSessionVersion !== sessionVersion) return
     await this.retranslateChangedSource(source, config, sessionVersion)
   }

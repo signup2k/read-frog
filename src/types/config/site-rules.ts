@@ -40,6 +40,8 @@ export const siteRuleSchema = z.object({
   "preserveTextSelectors.remove": z.array(z.string()).optional(),
   minCharacters: z.number().int().min(0).optional(),
   minWords: z.number().int().min(0).optional(),
+  providerId: z.string().min(1).optional(),
+  translationMode: z.enum(["bilingual", "translationOnly"]).optional(),
   injectedCss: z.string().max(MAX_CUSTOM_CSS_LENGTH).optional(),
   "injectedCss.add": z.array(z.string().max(MAX_CUSTOM_CSS_LENGTH)).optional(),
   enabled: z.boolean().optional(),

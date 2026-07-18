@@ -96,10 +96,6 @@ describe("feature providers", () => {
             translate: { enabled: true, providerId: "deleted-provider", shortcut: "Alt+T" },
           },
         },
-        inputTranslation: {
-          ...DEFAULT_CONFIG.inputTranslation,
-          providerId: "deleted-provider",
-        },
       }
 
       const remainingProviders = [
@@ -117,7 +113,6 @@ describe("feature providers", () => {
         translate: "microsoft-translate-default",
         videoSubtitles: "microsoft-translate-default",
         "selectionToolbar.translate": "microsoft-translate-default",
-        inputTranslation: "microsoft-translate-default",
       })
     })
 

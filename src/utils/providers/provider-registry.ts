@@ -62,7 +62,6 @@ const LOCAL_PROVIDER_CAPABILITY_PREDICATES = {
   translate: isTranslateProviderConfig,
   videoSubtitles: isTranslateProviderConfig,
   "selectionToolbar.translate": isTranslateProviderConfig,
-  inputTranslation: isTranslateProviderConfig,
   "selectionToolbar.customAction": isLLMProviderConfig,
 } as const satisfies Record<ProviderCapability, ProviderConfigPredicate>
 

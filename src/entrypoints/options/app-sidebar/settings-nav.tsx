@@ -88,16 +88,6 @@ export function SettingsNav() {
             </SidebarMenuButton>
           </SidebarMenuItem>
 
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              render={<Link to="/input-translation" />}
-              isActive={pathname === "/input-translation"}
-            >
-              <Icon icon="tabler:keyboard" />
-              <span>{i18n.t("options.overlayTools.inputTranslation.title")}</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-
           <Collapsible defaultOpen={isOverlayToolsActive} className="group/collapsible">
             <SidebarMenuItem>
               <CollapsibleTrigger render={<SidebarMenuButton isActive={isOverlayToolsActive} />}>

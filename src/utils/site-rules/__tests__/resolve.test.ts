@@ -42,6 +42,21 @@ describe("resolveSiteRule", () => {
     expect(resolved.minWords).toBe(3)
   })
 
+  it("applies page provider and translation mode last-wins", () => {
+    const resolved = resolveSiteRule(
+      URL_ON_SITE,
+      [rule({ id: "built-in", providerId: "provider-a", translationMode: "bilingual" })],
+      [
+        rule({ id: "user-a", providerId: "provider-b" }),
+        rule({ id: "user-b", translationMode: "translationOnly" }),
+      ],
+      [],
+    )
+
+    expect(resolved.providerId).toBe("provider-b")
+    expect(resolved.translationMode).toBe("translationOnly")
+  })
+
   it("concatenates injectedCss instead of replacing it", () => {
     const resolved = resolveSiteRule(
       URL_ON_SITE,

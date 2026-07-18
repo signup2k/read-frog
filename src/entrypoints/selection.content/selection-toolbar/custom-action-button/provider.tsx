@@ -27,9 +27,6 @@ import { createSelectionToolbarPrecheckError } from "../inline-error"
 import { useSelectionOpenRequestResolver } from "../use-selection-open-request"
 import { CustomActionContent } from "./custom-action-content"
 import { CustomActionToolButton } from "./custom-action-tool-button"
-import { SaveToNotebaseButton } from "./save-to-notebase-button"
-import { isSaveToNotebaseDialogOpenAtom } from "./save-to-notebase-dialog-atom"
-import { SaveToNotebaseDialogHost } from "./save-to-notebase-dialog-host"
 import {
   buildCustomActionExecutionPlan,
   useCustomActionExecution,
@@ -82,7 +79,6 @@ export function SelectionCustomActionProvider({ children }: { children: ReactNod
   const language = useAtomValue(configFieldsAtomMap.language)
   const setIsSelectionToolbarVisible = useSetAtom(isSelectionToolbarVisibleAtom)
   const setConfig = useSetAtom(writeConfigAtom)
-  const isSaveToNotebaseDialogOpen = useAtomValue(isSaveToNotebaseDialogOpenAtom)
   const bodyRef = useRef<HTMLDivElement>(null)
   const pendingOpenRequestRef = useRef<SelectionCustomActionPendingOpenRequest | null>(null)
   const reopenFrameRef = useRef<number | null>(null)
@@ -388,7 +384,6 @@ export function SelectionCustomActionProvider({ children }: { children: ReactNod
         onOpenChange={handleOpenChange}
         anchor={anchor}
         onAnchorChange={setAnchor}
-        disablePointerDismissal={isSaveToNotebaseDialogOpen}
       >
         <SelectionPopover.Content
           key={popoverSessionKey}
@@ -423,20 +418,10 @@ export function SelectionCustomActionProvider({ children }: { children: ReactNod
             onProviderChange={handleProviderChange}
             onRegenerate={handleRegenerate}
           >
-            {activeAction && (
-              <>
-                <SaveToNotebaseButton
-                  action={activeAction}
-                  isRunning={displayedIsRunning}
-                  result={displayedResult}
-                />
-                <CustomActionToolButton action={activeAction} />
-              </>
-            )}
+            {activeAction && <CustomActionToolButton action={activeAction} />}
           </SelectionToolbarFooterContent>
         </SelectionPopover.Content>
       </SelectionPopover.Root>
-      <SaveToNotebaseDialogHost />
     </SelectionCustomActionContext>
   )
 }

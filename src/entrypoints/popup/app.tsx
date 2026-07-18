@@ -1,5 +1,4 @@
 import { Icon } from "@iconify/react"
-import { UserAccountMenuPopup } from "@/components/user-account-menu"
 import { i18n } from "@/utils/i18n"
 import { openOptionsPage } from "@/utils/navigation"
 import { version } from "../../../package.json"
@@ -12,25 +11,22 @@ import { MoreMenu } from "./components/more-menu"
 import Hotkey from "./components/node-translation-hotkey-selector"
 import ProvidersField from "./components/providers-field"
 import { SiteControlToggle } from "./components/site-control-toggle"
+import { SiteTranslationBinding } from "./components/site-translation-binding"
 import TranslateButton from "./components/translate-button"
 import TranslatePromptSelector from "./components/translate-prompt-selector"
-import { TranslationHubButton } from "./components/translation-hub-button"
 import TranslationModeSelector from "./components/translation-mode-selector"
 
 function App() {
   return (
     <>
       <div className="flex flex-col gap-4 bg-background px-6 pt-5 pb-4">
-        <div className="flex items-center justify-between">
-          <UserAccountMenuPopup />
-          <div className="flex items-center">
-            <TranslationHubButton />
-            <DiscordButton />
-            <BlogNotification />
-          </div>
+        <div className="flex items-center justify-end">
+          <DiscordButton />
+          <BlogNotification />
         </div>
         <LanguageOptionsSelector />
         <ProvidersField />
+        <SiteTranslationBinding />
         <TranslatePromptSelector />
         <div className="flex w-full items-center gap-2">
           <TranslationModeSelector />

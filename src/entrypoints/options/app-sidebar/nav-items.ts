@@ -8,7 +8,6 @@ export const ROUTE_DEFS = [
   { path: "/floating-button" },
   { path: "/selection-toolbar" },
   { path: "/context-menu" },
-  { path: "/input-translation" },
   { path: "/tts" },
   { path: "/statistics" },
   { path: "/config" },

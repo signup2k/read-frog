@@ -1,5 +1,6 @@
 import type { ResolvedSiteRule } from "./resolve"
 import type { Config } from "@/types/config/config"
+import { doesProviderSupportsCapability } from "@/utils/providers/provider-registry"
 import { BUILT_IN_SITE_RULES } from "./built-in"
 import { resolveSiteRule } from "./resolve"
 
@@ -28,4 +29,34 @@ export function getEffectiveSiteRule(config: Config, url: string): ResolvedSiteR
   )
   cache.set(config, { url, rule })
   return rule
+}
+
+/**
+ * Apply per-site page-translation bindings without changing any other feature's
+ * provider assignment. A missing, disabled, or incompatible site provider is
+ * ignored so the schema-validated global page provider remains the fallback.
+ */
+export function getEffectivePageTranslationConfig(config: Config, url: string): Config {
+  const rule = getEffectiveSiteRule(config, url)
+  const providerId =
+    rule.providerId &&
+    doesProviderSupportsCapability("translate", config.providersConfig, rule.providerId, {
+      requireEnable: true,
+    })
+      ? rule.providerId
+      : config.translate.providerId
+  const mode = rule.translationMode ?? config.translate.mode
+
+  if (providerId === config.translate.providerId && mode === config.translate.mode) {
+    return config
+  }
+
+  return {
+    ...config,
+    translate: {
+      ...config.translate,
+      providerId,
+      mode,
+    },
+  }
 }

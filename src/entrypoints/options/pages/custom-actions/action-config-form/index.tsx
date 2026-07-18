@@ -20,13 +20,11 @@ import {
   SELECTION_TOOLBAR_CUSTOM_ACTION_TOKENS,
 } from "@/utils/constants/custom-action"
 import { i18n } from "@/utils/i18n"
-import { sanitizeSelectionToolbarCustomAction } from "@/utils/notebase/connection"
 import { cn } from "@/utils/styles/utils"
 import { selectedCustomActionIdAtom } from "../atoms"
 import { formOpts, useAppForm } from "./form"
 import { IconField } from "./icon-field"
 import { NameField } from "./name-field"
-import { NotebaseConnectionField } from "./notebase-connection-field"
 import { OutputSchemaField } from "./output-schema-field"
 import { ProviderField } from "./provider-field"
 
@@ -67,9 +65,8 @@ function CustomActionConfigEditor({
     ...formOpts,
     defaultValues: selectedAction,
     onSubmit: async ({ value }) => {
-      const nextValue = sanitizeSelectionToolbarCustomAction(value)
       const updatedCustomActions = customActions.map((action) =>
-        action.id === selectedAction.id ? nextValue : action,
+        action.id === selectedAction.id ? value : action,
       )
 
       await setSelectionToolbarConfig({
@@ -146,8 +143,6 @@ function CustomActionConfigEditor({
           </form.AppField>
 
           <OutputSchemaField form={form} />
-
-          <NotebaseConnectionField form={form} />
         </div>
         <div className="mt-8 flex justify-end">
           <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

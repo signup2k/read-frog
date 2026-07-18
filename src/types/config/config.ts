@@ -45,9 +45,6 @@ const selectionToolbarSchema = z.object({
     speak: selectionToolbarSpeakFeatureSchema,
   }),
   customActions: selectionToolbarCustomActionsSchema,
-  saveSuggestion: z.object({
-    enabled: z.boolean(),
-  }),
 })
 
 // side content schema
@@ -64,26 +61,6 @@ const betaExperienceSchema = z.object({
 const contextMenuSchema = z.object({
   enabled: z.boolean(),
 })
-
-// input translation language selector: 'sourceCode', 'targetCode', or fixed language code
-const inputTranslationLangSchema = z.union([
-  z.literal("sourceCode"),
-  z.literal("targetCode"),
-  langCodeISO6393Schema,
-])
-
-// input translation schema (triple-space trigger)
-const inputTranslationSchema = z.object({
-  enabled: z.boolean(),
-  providerId: z.string().nonempty(),
-  fromLang: inputTranslationLangSchema,
-  toLang: inputTranslationLangSchema,
-  enableCycle: z.boolean(),
-  timeThreshold: z.number().min(100).max(1000),
-})
-
-// Export types for use in components
-export type InputTranslationLang = z.infer<typeof inputTranslationLangSchema>
 
 // site control schema
 const siteControlSchema = z.object({
@@ -116,7 +93,6 @@ export const configSchema = z
     sideContent: sideContentSchema,
     betaExperience: betaExperienceSchema,
     contextMenu: contextMenuSchema,
-    inputTranslation: inputTranslationSchema,
     videoSubtitles: videoSubtitlesSchema,
     siteControl: siteControlSchema,
     siteRules: siteRulesConfigSchema,

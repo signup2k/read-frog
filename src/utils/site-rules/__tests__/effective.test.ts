@@ -2,7 +2,7 @@
 import type { Config } from "@/types/config/config"
 import { describe, expect, it } from "vitest"
 import { DEFAULT_CONFIG } from "@/utils/constants/config"
-import { getEffectiveSiteRule } from "../effective"
+import { getEffectivePageTranslationConfig, getEffectiveSiteRule } from "../effective"
 
 function configWithUserRules(userRules: Config["siteRules"]["userRules"]): Config {
   const config = structuredClone(DEFAULT_CONFIG)
@@ -50,5 +50,38 @@ describe("getEffectiveSiteRule", () => {
     config.siteRules.disabledBuiltInRules = ["readfrog-github"]
     const disabled = getEffectiveSiteRule(config, "https://github.com/foo")
     expect(disabled.matchedRuleIds).not.toContain("readfrog-github")
+  })
+})
+
+describe("getEffectivePageTranslationConfig", () => {
+  it("overrides only the page translation provider and mode", () => {
+    const config = configWithUserRules([
+      {
+        id: "user",
+        matches: "example.com",
+        providerId: "google-translate-default",
+        translationMode: "translationOnly",
+      },
+    ])
+    const effective = getEffectivePageTranslationConfig(config, "https://example.com/article")
+
+    expect(effective.translate.providerId).toBe("google-translate-default")
+    expect(effective.translate.mode).toBe("translationOnly")
+    expect(effective.providersConfig).toBe(config.providersConfig)
+    expect(config.translate.providerId).not.toBe("google-translate-default")
+  })
+
+  it("falls back to the global provider for missing, disabled, and incompatible bindings", () => {
+    const config = configWithUserRules([])
+    const disabled = structuredClone(config.providersConfig[0])
+    disabled.id = "disabled-site-provider"
+    disabled.enabled = false
+    config.providersConfig.push(disabled)
+
+    for (const providerId of ["missing-provider", "disabled-site-provider"]) {
+      config.siteRules.userRules = [{ id: providerId, matches: "example.com", providerId }]
+      const effective = getEffectivePageTranslationConfig(config, "https://example.com/article")
+      expect(effective.translate.providerId).toBe(config.translate.providerId)
+    }
   })
 })

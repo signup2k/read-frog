@@ -64,7 +64,6 @@ describe("dEFAULT_CONFIG", () => {
     expect(DEFAULT_CONFIG.selectionToolbar.features.translate.providerId).toBe(
       "microsoft-translate-default",
     )
-    expect(DEFAULT_CONFIG.inputTranslation.providerId).toBe("microsoft-translate-default")
     expect(DEFAULT_CONFIG.videoSubtitles.providerId).toBe("microsoft-translate-default")
     expect(
       DEFAULT_CONFIG.providersConfig.find((provider) => provider.id === "deepseek-default"),

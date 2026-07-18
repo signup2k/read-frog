@@ -16,6 +16,8 @@ export interface ResolvedSiteRule {
   preserveTextSelector: string | null
   minCharacters: number | null
   minWords: number | null
+  providerId: string | null
+  translationMode: "bilingual" | "translationOnly" | null
   injectedCss: string | null
 }
 
@@ -28,6 +30,8 @@ export const EMPTY_RESOLVED_SITE_RULE: ResolvedSiteRule = {
   preserveTextSelector: null,
   minCharacters: null,
   minWords: null,
+  providerId: null,
+  translationMode: null,
   injectedCss: null,
 }
 
@@ -131,6 +135,8 @@ export function resolveSiteRule(
 
   let minCharacters: number | null = null
   let minWords: number | null = null
+  let providerId: string | null = null
+  let translationMode: "bilingual" | "translationOnly" | null = null
   const cssParts: string[] = []
   for (const rule of matched) {
     if (rule.minCharacters !== undefined) {
@@ -138,6 +144,12 @@ export function resolveSiteRule(
     }
     if (rule.minWords !== undefined) {
       minWords = rule.minWords
+    }
+    if (rule.providerId !== undefined) {
+      providerId = rule.providerId
+    }
+    if (rule.translationMode !== undefined) {
+      translationMode = rule.translationMode
     }
     const injectedCssParts = [rule.injectedCss, ...(rule["injectedCss.add"] ?? [])]
     for (const css of injectedCssParts) {
@@ -181,6 +193,8 @@ export function resolveSiteRule(
     ),
     minCharacters,
     minWords,
+    providerId,
+    translationMode,
     injectedCss: cssParts.length > 0 ? cssParts.join("\n") : null,
   }
 }

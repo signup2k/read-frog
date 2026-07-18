@@ -4,12 +4,7 @@ import { isTranslateProvider } from "@/types/config/provider"
 import { mergeWithArrayOverwrite } from "../atoms/config"
 import { getProviderConfigById } from "../config/helpers"
 
-export const FEATURE_KEYS = [
-  "translate",
-  "videoSubtitles",
-  "selectionToolbar.translate",
-  "inputTranslation",
-] as const
+export const FEATURE_KEYS = ["translate", "videoSubtitles", "selectionToolbar.translate"] as const
 
 export type FeatureKey = (typeof FEATURE_KEYS)[number]
 
@@ -35,11 +30,6 @@ export const FEATURE_PROVIDER_DEFS = {
     getProviderId: (c: Config) => c.selectionToolbar.features.translate.providerId,
     configPath: ["selectionToolbar", "features", "translate", "providerId"],
   },
-  inputTranslation: {
-    isProvider: isTranslateProvider,
-    getProviderId: (c: Config) => c.inputTranslation.providerId,
-    configPath: ["inputTranslation", "providerId"],
-  },
 } as const satisfies Record<FeatureKey, FeatureProviderDef>
 
 /** Maps FeatureKey (with dots) to i18n-safe key (with underscores) for `options.general.featureProviders.features.*` */
@@ -47,7 +37,6 @@ export const FEATURE_KEY_I18N_MAP = {
   translate: "translate",
   videoSubtitles: "videoSubtitles",
   "selectionToolbar.translate": "selectionToolbar_translate",
-  inputTranslation: "inputTranslation",
 } as const satisfies Record<FeatureKey, string>
 
 export type FeatureLabelI18nKey =
