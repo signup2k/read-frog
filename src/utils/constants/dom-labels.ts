@@ -15,6 +15,9 @@ export const VIRTUAL_PARAGRAPH_ATTRIBUTE = "data-read-frog-virtual-paragraph"
 // translationOnly mode) — the queryable handle for restore, since no wrapper
 // remains in the DOM after a successful swap.
 export const TRANSLATION_ONLY_ATTRIBUTE = "data-read-frog-translation-only"
+// Keeps a newly inserted source run visually hidden while translationOnly
+// waits for its first provider response. The spinner remains visible.
+export const TRANSLATION_PENDING_ATTRIBUTE = "data-read-frog-translation-pending"
 
 export const MARK_ATTRIBUTES = new Set([
   WALKED_ATTRIBUTE,

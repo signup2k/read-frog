@@ -5,7 +5,11 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { DEFAULT_CONFIG } from "@/utils/constants/config"
-import { CONTENT_WRAPPER_CLASS, TRANSLATION_ONLY_ATTRIBUTE } from "@/utils/constants/dom-labels"
+import {
+  CONTENT_WRAPPER_CLASS,
+  TRANSLATION_ONLY_ATTRIBUTE,
+  TRANSLATION_PENDING_ATTRIBUTE,
+} from "@/utils/constants/dom-labels"
 import { flushBatchedOperations } from "../../../dom/batch-dom"
 import {
   removeAllTranslatedWrapperNodes,
@@ -198,6 +202,75 @@ describe("translationOnly node-identity restore (#1846)", () => {
     expect(p.textContent).toBe("更新后的中文译文")
   })
 
+  it("hides a fresh source run until its first translation is ready", async () => {
+    const p = document.createElement("p")
+    p.textContent = "Freshly opened RSS item"
+    document.body.append(p)
+
+    let resolveTranslation!: (value: string) => void
+    mockTranslateTextForPage.mockReturnValue(
+      new Promise<string>((resolve) => {
+        resolveTranslation = resolve
+      }),
+    )
+
+    const translation = translateNodeTranslationOnlyMode([p], "walk-1", DEFAULT_CONFIG)
+    await vi.waitFor(() => expect(mockTranslateTextForPage).toHaveBeenCalled())
+    flushBatchedOperations()
+
+    expect(p.hasAttribute(TRANSLATION_PENDING_ATTRIBUTE)).toBe(true)
+    expect(getWrappers(p).length).toBe(1)
+
+    resolveTranslation("刚打开的 RSS 条目")
+    await translation
+    flushBatchedOperations()
+
+    expect(p.hasAttribute(TRANSLATION_PENDING_ATTRIBUTE)).toBe(false)
+    expect(p.textContent).toBe("刚打开的 RSS 条目")
+  })
+
+  it("keeps a shared parent pending until every fresh run is ready", async () => {
+    const container = document.createElement("div")
+    const first = document.createTextNode("First dynamic run")
+    const second = document.createTextNode("Second dynamic run")
+    container.append(first, second)
+    document.body.append(container)
+
+    let resolveFirst!: (value: string) => void
+    let resolveSecond!: (value: string) => void
+    mockTranslateTextForPage
+      .mockReturnValueOnce(
+        new Promise<string>((resolve) => {
+          resolveFirst = resolve
+        }),
+      )
+      .mockReturnValueOnce(
+        new Promise<string>((resolve) => {
+          resolveSecond = resolve
+        }),
+      )
+
+    const firstTranslation = translateNodeTranslationOnlyMode([first], "walk-first", DEFAULT_CONFIG)
+    const secondTranslation = translateNodeTranslationOnlyMode(
+      [second],
+      "walk-second",
+      DEFAULT_CONFIG,
+    )
+    await vi.waitFor(() => expect(mockTranslateTextForPage).toHaveBeenCalledTimes(2))
+    flushBatchedOperations()
+    expect(container.hasAttribute(TRANSLATION_PENDING_ATTRIBUTE)).toBe(true)
+
+    resolveFirst("第一段译文")
+    await firstTranslation
+    flushBatchedOperations()
+    expect(container.hasAttribute(TRANSLATION_PENDING_ATTRIBUTE)).toBe(true)
+
+    resolveSecond("第二段译文")
+    await secondTranslation
+    flushBatchedOperations()
+    expect(container.hasAttribute(TRANSLATION_PENDING_ATTRIBUTE)).toBe(false)
+  })
+
   it("does not remove originals when cleanup ran while translation was in flight", async () => {
     const p = document.createElement("p")
     p.textContent = "Original sentence"
@@ -218,6 +291,7 @@ describe("translationOnly node-identity restore (#1846)", () => {
 
     removeAllTranslatedWrapperNodes(document)
     flushBatchedOperations()
+    expect(p.hasAttribute(TRANSLATION_PENDING_ATTRIBUTE)).toBe(false)
 
     resolveTranslation("中文译文")
     await translation

@@ -10,12 +10,14 @@ import {
   SPINNER_CLASS,
   TRANSLATION_MODE_ATTRIBUTE,
   TRANSLATION_ONLY_ATTRIBUTE,
+  TRANSLATION_PENDING_ATTRIBUTE,
   VIRTUAL_PARAGRAPH_ATTRIBUTE,
 } from "../../../constants/dom-labels"
 import { removeReactShadowHost } from "../../../react-shadow-host/create-shadow-host"
 import { isHTMLElement, isTranslatedWrapperNode } from "../../dom/filter"
 import { deepQueryAllSelector, deepQueryTopLevelSelector } from "../../dom/find"
 import {
+  clearTranslationOnlyPending,
   dropTranslationOnlySwapRecords,
   getBilingualTranslationStateForWrapper,
   getPendingBilingualTranslationStates,
@@ -406,6 +408,9 @@ export function removeAllTranslatedWrapperNodes(root: Document | ShadowRoot = do
   getPendingVirtualParagraphGroups()
     .filter((group) => isInsideRoot(group.layoutSource))
     .forEach(disposeVirtualParagraphGroup)
+  deepQueryAllSelector(root, (element) =>
+    element.hasAttribute(TRANSLATION_PENDING_ATTRIBUTE),
+  ).forEach(clearTranslationOnlyPending)
   const translatedNodes = deepQueryTopLevelSelector(root, isTranslatedWrapperNode)
   translatedNodes.forEach((contentWrapperNode) => {
     removeTranslatedWrapperWithRestore(contentWrapperNode)

@@ -125,12 +125,20 @@ Structure:
 
 Purpose: implements bilingual and translation-only DOM rendering, filtering, provider requests, and guarded retranslation.
 Structure: bilingual mode (L400), translation-only mode (L590).
-Gotchas: translation-only refresh restores source values to prepare the request, then replays the previous swap so users do not see source text while the provider is pending.
+Gotchas: translation-only refresh restores source values to prepare the request, then replays the previous swap so users do not see source text while the provider is pending; a fresh dynamic run uses a pending-visibility marker until its first result is ready.
 
 ### src/utils/host/translate/dom/translation-cleanup.ts (~410 lines, ts, map-updated 2026-07-25)
 
-Purpose: removes translation UI and safely restores displaced nodes or in-place text swaps.
+Purpose: removes translation UI, clears pending-visibility state, and safely restores displaced nodes or in-place text swaps.
 Structure: wrapper restore (L185), guarded swap restore/replay (L223-L355), global cleanup (L390).
+
+### src/utils/host/translate/core/translation-state.ts (~290 lines, ts, map-updated 2026-07-25)
+
+Purpose: owns translation lifecycle registries, guarded text-swap state, extension-driven mutation attribution, and reference-counted translation-only pending visibility.
+
+### src/assets/styles/translation-node-preset.css (~190 lines, css, map-updated 2026-07-25)
+
+Purpose: provides host-page styles for translated wrappers, language typography, and pending translation-only source visibility.
 
 ### `src/utils/host/translate/core/__tests__/translation-only-restore.test.ts` (~560 lines, ts, map-updated 2026-07-25)
 

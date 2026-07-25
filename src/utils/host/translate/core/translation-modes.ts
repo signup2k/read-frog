@@ -51,6 +51,7 @@ import { createSpinnerInside, getTranslatedTextAndRemoveSpinner } from "../ui/sp
 import { isNumericContent } from "../ui/translation-utils"
 import {
   attachBilingualTranslationWrapper,
+  beginTranslationOnlyPending,
   collectSourceTextExcludingWrappers,
   getBilingualTranslationStateForSource,
   getTranslationOnlyAnchorState,
@@ -644,6 +645,7 @@ export async function translateNodeTranslationOnlyMode(
     return
   }
 
+  let releasePendingVisibility: (() => void) | undefined
   try {
     if (nodes.every((node) => translatingNodes.has(node))) {
       return
@@ -721,6 +723,13 @@ export async function translateNodeTranslationOnlyMode(
     const protectedHtml = protectTranslationHtmlAttributes(transNodes, ownerDoc)
     const textContent = protectedHtml.sourceHtml
     if (!textContent) return
+    // A fresh dynamic region (for example an opened RSS item) has no previous
+    // translation to keep on screen. Preserve its layout but hide the source
+    // run until the first translation is ready, avoiding an original→spinner→
+    // translation flash. Retranslation keeps showing the replayed old result.
+    if (!restoredOwnSwap) {
+      releasePendingVisibility = beginTranslationOnlyPending(parentNode)
+    }
 
     // Taken before the provider request; the response handler compares against
     // it to detect host mutations that happened while the request was in
@@ -826,12 +835,18 @@ export async function translateNodeTranslationOnlyMode(
       // Keep the wrapper when translation failed so the injected error UI remains visible.
       // Only remove the wrapper when translation returned an empty string.
       if (translatedText === "") {
+        const releasePending = releasePendingVisibility
+        releasePendingVisibility = undefined
         batchDOMOperation(() => {
-          if (replayedPreviousSwap && swapAnchor) {
-            restoreTranslationOnlySwapsForAnchor(swapAnchor, transNodes, { keepRecords: true })
+          try {
+            if (replayedPreviousSwap && swapAnchor) {
+              restoreTranslationOnlySwapsForAnchor(swapAnchor, transNodes, { keepRecords: true })
+            }
+            markExtensionDrivenNodeRemoval(translatedWrapperNode)
+            translatedWrapperNode.remove()
+          } finally {
+            releasePending?.()
           }
-          markExtensionDrivenNodeRemoval(translatedWrapperNode)
-          translatedWrapperNode.remove()
         })
       }
       return
@@ -842,30 +857,36 @@ export async function translateNodeTranslationOnlyMode(
     // wrapper was only the spinner vehicle and is removed.
     const swapPlan = planInPlaceTextSwap(transNodes, translatedText, ownerDoc)
     if (swapPlan) {
+      const releasePending = releasePendingVisibility
+      releasePendingVisibility = undefined
       batchDOMOperation(() => {
-        // Wrapper gone: a global cleanup ran while the provider call was in
-        // flight, or the host re-rendered the region — leave originals alone.
-        if (!translatedWrapperNode.isConnected) return
-        if (replayedPreviousSwap && swapAnchor) {
-          restoreTranslationOnlySwapsForAnchor(swapAnchor, transNodes, {
-            keepRecords: true,
-            refreshExpectedText: false,
-          })
+        try {
+          // Wrapper gone: a global cleanup ran while the provider call was in
+          // flight, or the host re-rendered the region — leave originals alone.
+          if (!translatedWrapperNode.isConnected) return
+          if (replayedPreviousSwap && swapAnchor) {
+            restoreTranslationOnlySwapsForAnchor(swapAnchor, transNodes, {
+              keepRecords: true,
+              refreshExpectedText: false,
+            })
+          }
+          markExtensionDrivenNodeRemoval(translatedWrapperNode)
+          translatedWrapperNode.remove()
+          // Host mutated the run mid-flight: the translation is stale, drop it.
+          // Any kept (restore-first) records still reference the run, so the
+          // staleness pipeline retries with the host's fresh text.
+          if (!verifySourceSnapshot(transNodes, sourceSnapshot)) return
+          applyInPlaceTextSwap(
+            swapPlan,
+            transNodes,
+            parentNode,
+            walkId,
+            config,
+            getTranslationOnlyAnchorState,
+          )
+        } finally {
+          releasePending?.()
         }
-        markExtensionDrivenNodeRemoval(translatedWrapperNode)
-        translatedWrapperNode.remove()
-        // Host mutated the run mid-flight: the translation is stale, drop it.
-        // Any kept (restore-first) records still reference the run, so the
-        // staleness pipeline retries with the host's fresh text.
-        if (!verifySourceSnapshot(transNodes, sourceSnapshot)) return
-        applyInPlaceTextSwap(
-          swapPlan,
-          transNodes,
-          parentNode,
-          walkId,
-          config,
-          getTranslationOnlyAnchorState,
-        )
       })
       return
     }
@@ -875,30 +896,37 @@ export async function translateNodeTranslationOnlyMode(
     translatedWrapperNode.innerHTML = translatedText
 
     // Batch final DOM mutations to reduce layout thrashing
+    const releasePending = releasePendingVisibility
+    releasePendingVisibility = undefined
     batchDOMOperation(() => {
-      // Wrapper gone from the document: a global cleanup ran while the provider
-      // call was in flight, or the host re-rendered the region. The originals
-      // are the live content — don't remove them to apply a stale translation.
-      if (!translatedWrapperNode.isConnected) return
-      if (replayedPreviousSwap && swapAnchor) {
-        restoreTranslationOnlySwapsForAnchor(swapAnchor, transNodes, {
-          keepRecords: true,
-          refreshExpectedText: false,
-        })
+      try {
+        // Wrapper gone from the document: a global cleanup ran while the provider
+        // call was in flight, or the host re-rendered the region. The originals
+        // are the live content — don't remove them to apply a stale translation.
+        if (!translatedWrapperNode.isConnected) return
+        if (replayedPreviousSwap && swapAnchor) {
+          restoreTranslationOnlySwapsForAnchor(swapAnchor, transNodes, {
+            keepRecords: true,
+            refreshExpectedText: false,
+          })
+        }
+
+        // Insert translated content after the last node
+        const lastChildNode = allChildNodes.at(-1)!
+        lastChildNode.parentNode?.insertBefore(translatedWrapperNode, lastChildNode.nextSibling)
+
+        registerTranslationOnlyOriginals(translatedWrapperNode, allChildNodes)
+        allChildNodes.forEach((childNode) => childNode.remove())
+        // The wrapper now owns this run; kept swap records (restore-first
+        // retranslation) would reference displaced nodes and read as
+        // permanently stale — drop them.
+        if (swapAnchor) dropTranslationOnlySwapRecordsForNodes(swapAnchor, transNodes)
+      } finally {
+        releasePending?.()
       }
-
-      // Insert translated content after the last node
-      const lastChildNode = allChildNodes.at(-1)!
-      lastChildNode.parentNode?.insertBefore(translatedWrapperNode, lastChildNode.nextSibling)
-
-      registerTranslationOnlyOriginals(translatedWrapperNode, allChildNodes)
-      allChildNodes.forEach((childNode) => childNode.remove())
-      // The wrapper now owns this run; kept swap records (restore-first
-      // retranslation) would reference displaced nodes and read as
-      // permanently stale — drop them.
-      if (swapAnchor) dropTranslationOnlySwapRecordsForNodes(swapAnchor, transNodes)
     })
   } finally {
+    releasePendingVisibility?.()
     nodes.forEach((node) => translatingNodes.delete(node))
   }
 }
