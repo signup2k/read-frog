@@ -12,7 +12,7 @@ import {
   VIRTUAL_PARAGRAPH_ATTRIBUTE,
   WALKED_ATTRIBUTE,
 } from "../../../constants/dom-labels"
-import { batchDOMOperation } from "../../dom/batch-dom"
+import { batchDOMOperation, type DOMCommitGroup } from "../../dom/batch-dom"
 import { isBlockTransNode, isHTMLElement, isTextNode, isTransNode } from "../../dom/filter"
 import { unwrapDeepestOnlyHTMLChild } from "../../dom/find"
 import { getOwnerDocument } from "../../dom/node"
@@ -51,7 +51,6 @@ import { createSpinnerInside, getTranslatedTextAndRemoveSpinner } from "../ui/sp
 import { isNumericContent } from "../ui/translation-utils"
 import {
   attachBilingualTranslationWrapper,
-  beginTranslationOnlyPending,
   collectSourceTextExcludingWrappers,
   getBilingualTranslationStateForSource,
   getTranslationOnlyAnchorState,
@@ -316,10 +315,11 @@ export async function translateNodes(
   toggle: boolean = false,
   config: Config,
   forceBlockTranslation: boolean = false,
+  commitGroup?: DOMCommitGroup,
 ): Promise<void> {
   const translationMode = config.translate.mode
   if (translationMode === "translationOnly") {
-    await translateNodeTranslationOnlyMode(nodes, walkId, config, toggle)
+    await translateNodeTranslationOnlyMode(nodes, walkId, config, toggle, commitGroup)
   } else if (translationMode === "bilingual") {
     await translateNodesBilingualMode(nodes, walkId, config, toggle, forceBlockTranslation)
   }
@@ -592,11 +592,29 @@ function findRunTranslationOnlyWrapper(
   return null
 }
 
+function stageTranslationOnlyDOMOperation(
+  operation: () => void,
+  translatedWrapperNode: HTMLElement,
+  commitGroup?: DOMCommitGroup,
+): void {
+  if (!commitGroup) {
+    batchDOMOperation(operation)
+    return
+  }
+
+  commitGroup.stage(operation, () => {
+    if (!translatedWrapperNode.isConnected) return
+    markExtensionDrivenNodeRemoval(translatedWrapperNode)
+    translatedWrapperNode.remove()
+  })
+}
+
 export async function translateNodeTranslationOnlyMode(
   nodes: ChildNode[],
   walkId: string,
   config: Config,
   toggle: boolean = false,
+  commitGroup?: DOMCommitGroup,
 ): Promise<void> {
   const isTransNodeAndNotTranslatedWrapper = (node: Node): node is TransNode => {
     if (isHTMLElement(node) && node.classList.contains(CONTENT_WRAPPER_CLASS)) return false
@@ -639,13 +657,12 @@ export async function translateNodeTranslationOnlyMode(
     if (!toggle) {
       const retryNodes = restored.filter((node) => node.isConnected)
       if (retryNodes.length > 0) {
-        void translateNodeTranslationOnlyMode(retryNodes, walkId, config, toggle)
+        await translateNodeTranslationOnlyMode(retryNodes, walkId, config, toggle, commitGroup)
       }
     }
     return
   }
 
-  let releasePendingVisibility: (() => void) | undefined
   try {
     if (nodes.every((node) => translatingNodes.has(node))) {
       return
@@ -701,7 +718,7 @@ export async function translateNodeTranslationOnlyMode(
         ? nodes
         : restoredNodes.filter((node) => node.isConnected)
       if (retryNodes.length > 0) {
-        void translateNodeTranslationOnlyMode(retryNodes, walkId, config, toggle)
+        await translateNodeTranslationOnlyMode(retryNodes, walkId, config, toggle, commitGroup)
       }
       return
     }
@@ -723,13 +740,6 @@ export async function translateNodeTranslationOnlyMode(
     const protectedHtml = protectTranslationHtmlAttributes(transNodes, ownerDoc)
     const textContent = protectedHtml.sourceHtml
     if (!textContent) return
-    // A fresh dynamic region (for example an opened RSS item) has no previous
-    // translation to keep on screen. Preserve its layout but hide the source
-    // run until the first translation is ready, avoiding an original→spinner→
-    // translation flash. Retranslation keeps showing the replayed old result.
-    if (!restoredOwnSwap) {
-      releasePendingVisibility = beginTranslationOnlyPending(parentNode)
-    }
 
     // Taken before the provider request; the response handler compares against
     // it to detect host mutations that happened while the request was in
@@ -835,19 +845,19 @@ export async function translateNodeTranslationOnlyMode(
       // Keep the wrapper when translation failed so the injected error UI remains visible.
       // Only remove the wrapper when translation returned an empty string.
       if (translatedText === "") {
-        const releasePending = releasePendingVisibility
-        releasePendingVisibility = undefined
-        batchDOMOperation(() => {
-          try {
+        stageTranslationOnlyDOMOperation(
+          () => {
             if (replayedPreviousSwap && swapAnchor) {
-              restoreTranslationOnlySwapsForAnchor(swapAnchor, transNodes, { keepRecords: true })
+              restoreTranslationOnlySwapsForAnchor(swapAnchor, transNodes, {
+                keepRecords: true,
+              })
             }
             markExtensionDrivenNodeRemoval(translatedWrapperNode)
             translatedWrapperNode.remove()
-          } finally {
-            releasePending?.()
-          }
-        })
+          },
+          translatedWrapperNode,
+          commitGroup,
+        )
       }
       return
     }
@@ -857,10 +867,8 @@ export async function translateNodeTranslationOnlyMode(
     // wrapper was only the spinner vehicle and is removed.
     const swapPlan = planInPlaceTextSwap(transNodes, translatedText, ownerDoc)
     if (swapPlan) {
-      const releasePending = releasePendingVisibility
-      releasePendingVisibility = undefined
-      batchDOMOperation(() => {
-        try {
+      stageTranslationOnlyDOMOperation(
+        () => {
           // Wrapper gone: a global cleanup ran while the provider call was in
           // flight, or the host re-rendered the region — leave originals alone.
           if (!translatedWrapperNode.isConnected) return
@@ -884,22 +892,17 @@ export async function translateNodeTranslationOnlyMode(
             config,
             getTranslationOnlyAnchorState,
           )
-        } finally {
-          releasePending?.()
-        }
-      })
+        },
+        translatedWrapperNode,
+        commitGroup,
+      )
       return
     }
 
     // Fallback strategy: render into the wrapper and displace the originals,
     // retaining the node objects so restore can re-insert the same nodes (#1846).
-    translatedWrapperNode.innerHTML = translatedText
-
-    // Batch final DOM mutations to reduce layout thrashing
-    const releasePending = releasePendingVisibility
-    releasePendingVisibility = undefined
-    batchDOMOperation(() => {
-      try {
+    stageTranslationOnlyDOMOperation(
+      () => {
         // Wrapper gone from the document: a global cleanup ran while the provider
         // call was in flight, or the host re-rendered the region. The originals
         // are the live content — don't remove them to apply a stale translation.
@@ -911,6 +914,10 @@ export async function translateNodeTranslationOnlyMode(
           })
         }
 
+        // Keep the completed fallback detached from visible rendering until
+        // this operation commits alongside the rest of its viewport batch.
+        translatedWrapperNode.innerHTML = translatedText
+
         // Insert translated content after the last node
         const lastChildNode = allChildNodes.at(-1)!
         lastChildNode.parentNode?.insertBefore(translatedWrapperNode, lastChildNode.nextSibling)
@@ -921,12 +928,11 @@ export async function translateNodeTranslationOnlyMode(
         // retranslation) would reference displaced nodes and read as
         // permanently stale — drop them.
         if (swapAnchor) dropTranslationOnlySwapRecordsForNodes(swapAnchor, transNodes)
-      } finally {
-        releasePending?.()
-      }
-    })
+      },
+      translatedWrapperNode,
+      commitGroup,
+    )
   } finally {
-    releasePendingVisibility?.()
     nodes.forEach((node) => translatingNodes.delete(node))
   }
 }

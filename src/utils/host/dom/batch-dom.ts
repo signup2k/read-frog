@@ -4,6 +4,16 @@
 
 type DOMOperation = () => void
 
+export interface DOMCommitGroup {
+  /**
+   * Stage a DOM write until the whole logical translation batch is ready.
+   * `onDiscard` removes any temporary UI owned by the staged write.
+   */
+  stage: (operation: DOMOperation, onDiscard?: DOMOperation) => void
+  commit: () => void
+  discard: () => void
+}
+
 class DOMBatcher {
   private operations: DOMOperation[] = []
   private rafId: number | null = null
@@ -72,6 +82,62 @@ class DOMBatcher {
 
 // Singleton instance for the entire application
 const domBatcher = new DOMBatcher()
+
+/**
+ * Build a scoped transaction on top of the frame batcher.
+ *
+ * Translation requests in one viewport batch can finish in different tasks.
+ * Staging their final writes here and committing one composite operation keeps
+ * the readable source DOM stable until every request in that batch settles.
+ */
+export function createDOMCommitGroup(): DOMCommitGroup {
+  let state: "active" | "committed" | "discarded" = "active"
+  const operations: DOMOperation[] = []
+  const discardOperations: DOMOperation[] = []
+
+  const runOperations = (queuedOperations: DOMOperation[]) => {
+    for (const operation of queuedOperations) {
+      try {
+        operation()
+      } catch (error) {
+        console.error("Error executing grouped DOM operation:", error)
+      }
+    }
+  }
+
+  return {
+    stage(operation, onDiscard) {
+      if (state === "active") {
+        operations.push(operation)
+        if (onDiscard) discardOperations.push(onDiscard)
+        return
+      }
+      if (state === "committed") {
+        batchDOMOperation(operation)
+      } else {
+        onDiscard?.()
+      }
+    },
+    commit() {
+      if (state !== "active") return
+      state = "committed"
+      discardOperations.length = 0
+      const committedOperations = operations.splice(0)
+      if (committedOperations.length > 0) {
+        batchDOMOperation(() => runOperations(committedOperations))
+      }
+    },
+    discard() {
+      if (state !== "active") return
+      state = "discarded"
+      operations.length = 0
+      const cleanupOperations = discardOperations.splice(0)
+      if (cleanupOperations.length > 0) {
+        batchDOMOperation(() => runOperations(cleanupOperations))
+      }
+    },
+  }
+}
 
 /**
  * Queue a DOM operation to be executed in a batched manner

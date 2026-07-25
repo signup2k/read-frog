@@ -1,4 +1,4 @@
-import { MARK_ATTRIBUTES, TRANSLATION_PENDING_ATTRIBUTE } from "../../../constants/dom-labels"
+import { MARK_ATTRIBUTES } from "../../../constants/dom-labels"
 import { isTranslatedWrapperNode } from "../../dom/filter"
 
 export interface TextSplitRecord {
@@ -107,34 +107,6 @@ export interface TranslationOnlyAnchorState {
 }
 
 const translationOnlyAnchorStates = new WeakMap<HTMLElement, TranslationOnlyAnchorState>()
-const translationOnlyPendingCounts = new WeakMap<HTMLElement, number>()
-
-/**
- * Hide a source run while its first translationOnly request is pending.
- * Ref-counting avoids revealing a shared parent until every run finishes.
- */
-export function beginTranslationOnlyPending(anchor: HTMLElement): () => void {
-  translationOnlyPendingCounts.set(anchor, (translationOnlyPendingCounts.get(anchor) ?? 0) + 1)
-  anchor.setAttribute(TRANSLATION_PENDING_ATTRIBUTE, "")
-
-  let released = false
-  return () => {
-    if (released) return
-    released = true
-    const remaining = (translationOnlyPendingCounts.get(anchor) ?? 1) - 1
-    if (remaining > 0) {
-      translationOnlyPendingCounts.set(anchor, remaining)
-      return
-    }
-    translationOnlyPendingCounts.delete(anchor)
-    anchor.removeAttribute(TRANSLATION_PENDING_ATTRIBUTE)
-  }
-}
-
-export function clearTranslationOnlyPending(anchor: HTMLElement): void {
-  translationOnlyPendingCounts.delete(anchor)
-  anchor.removeAttribute(TRANSLATION_PENDING_ATTRIBUTE)
-}
 
 function collectRunText(node: Node, parts: string[]): void {
   if (node.nodeType === Node.TEXT_NODE) {

@@ -24,17 +24,6 @@
   text-decoration: inherit;
 }
 
-/* translationOnly: preserve layout but do not flash newly inserted source text
-   while its first translation is pending. Descendant wrappers opt back into
-   visibility so the spinner/error UI remains observable. */
-[data-read-frog-translation-pending] {
-  visibility: hidden !important;
-}
-
-[data-read-frog-translation-pending] .read-frog-translated-content-wrapper {
-  visibility: visible !important;
-}
-
 /* Simplified Chinese - macOS > Windows > Cross-platform > Fallback */
 .read-frog-translated-content-wrapper[lang="zh"],
 .read-frog-translated-content-wrapper[lang="zh"] * {

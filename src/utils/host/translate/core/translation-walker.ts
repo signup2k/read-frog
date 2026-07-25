@@ -1,4 +1,5 @@
 import type { Config } from "@/types/config/config"
+import type { DOMCommitGroup } from "@/utils/host/dom/batch-dom"
 import type { WorkPacer } from "@/utils/scheduler"
 import { createWorkPacer, pauseIfBudgetSpent } from "@/utils/scheduler"
 import {
@@ -42,6 +43,7 @@ export async function translateWalkedElement(
   // so without this the walk keeps inserting wrappers/spinners into the page
   // the user just cleared (#1881).
   shouldContinue: () => boolean = () => true,
+  commitGroup?: DOMCommitGroup,
 ): Promise<void> {
   // Self-pacing: a giant observed subtree (a flat article can label as ONE
   // huge paragraph unit, #1881) must not expand into thousands of wrapper
@@ -78,7 +80,7 @@ export async function translateWalkedElement(
     const isFlexParent = computedStyle.display.includes("flex")
 
     if (!hasBlockNodeChild) {
-      promises.push(translateNodes([element], walkId, toggle, config))
+      promises.push(translateNodes([element], walkId, toggle, config, false, commitGroup))
     } else {
       // prevent children change during iteration
       const children = [...element.childNodes]
@@ -87,11 +89,26 @@ export async function translateWalkedElement(
         if (isTransNode(child) && isBlockTransNode(child) && !isTextNode(child)) {
           // force the children to be block translation style unless the parent is a flex parent
           promises.push(
-            translateNodes(consecutiveInlineNodes, walkId, toggle, config, !isFlexParent),
+            translateNodes(
+              consecutiveInlineNodes,
+              walkId,
+              toggle,
+              config,
+              !isFlexParent,
+              commitGroup,
+            ),
           )
           consecutiveInlineNodes = []
           promises.push(
-            translateWalkedElement(child, walkId, config, toggle, pacer, shouldContinue),
+            translateWalkedElement(
+              child,
+              walkId,
+              config,
+              toggle,
+              pacer,
+              shouldContinue,
+              commitGroup,
+            ),
           )
         } else {
           consecutiveInlineNodes.push(child)
@@ -99,20 +116,39 @@ export async function translateWalkedElement(
       }
 
       if (consecutiveInlineNodes.length) {
-        promises.push(translateNodes(consecutiveInlineNodes, walkId, toggle, config, !isFlexParent))
+        promises.push(
+          translateNodes(
+            consecutiveInlineNodes,
+            walkId,
+            toggle,
+            config,
+            !isFlexParent,
+            commitGroup,
+          ),
+        )
       }
     }
   } else {
     for (const child of element.childNodes) {
       if (isHTMLElement(child)) {
-        promises.push(translateWalkedElement(child, walkId, config, toggle, pacer, shouldContinue))
+        promises.push(
+          translateWalkedElement(child, walkId, config, toggle, pacer, shouldContinue, commitGroup),
+        )
       }
     }
     if (element.shadowRoot) {
       for (const child of element.shadowRoot.children) {
         if (isHTMLElement(child)) {
           promises.push(
-            translateWalkedElement(child, walkId, config, toggle, pacer, shouldContinue),
+            translateWalkedElement(
+              child,
+              walkId,
+              config,
+              toggle,
+              pacer,
+              shouldContinue,
+              commitGroup,
+            ),
           )
         }
       }

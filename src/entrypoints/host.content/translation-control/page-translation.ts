@@ -17,6 +17,7 @@ import {
   GIANT_PARAGRAPH_SPLIT_VIEWPORT_MULTIPLIER,
 } from "@/utils/constants/translate"
 import { getRandomUUID } from "@/utils/crypto-polyfill"
+import { createDOMCommitGroup } from "@/utils/host/dom/batch-dom"
 import {
   hasNoWalkAncestor,
   isHTMLElement,
@@ -240,8 +241,42 @@ export class PageTranslationManager implements IPageTranslationManager {
           // cancels mid-flight (#1881).
           const pacer = createWorkPacer()
           const isWalkCurrent = () => this.walkId === walkId
-          for (const target of targets) {
-            void translateWalkedElement(target, walkId, currentConfig, false, pacer, isWalkCurrent)
+          if (currentConfig.translate.mode !== "translationOnly") {
+            for (const target of targets) {
+              void translateWalkedElement(
+                target,
+                walkId,
+                currentConfig,
+                false,
+                pacer,
+                isWalkCurrent,
+              )
+            }
+            return
+          }
+
+          // Translation-only keeps the readable source intact while providers
+          // work. Final swaps from one IntersectionObserver delivery are then
+          // staged and written in a single animation frame, so paragraphs do
+          // not visibly flip languages one request at a time.
+          const commitGroup = createDOMCommitGroup()
+          await Promise.allSettled(
+            targets.map((target) =>
+              translateWalkedElement(
+                target,
+                walkId,
+                currentConfig,
+                false,
+                pacer,
+                isWalkCurrent,
+                commitGroup,
+              ),
+            ),
+          )
+          if (isWalkCurrent()) {
+            commitGroup.commit()
+          } else {
+            commitGroup.discard()
           }
         })()
       }, this.intersectionOptions)

@@ -5,12 +5,8 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { DEFAULT_CONFIG } from "@/utils/constants/config"
-import {
-  CONTENT_WRAPPER_CLASS,
-  TRANSLATION_ONLY_ATTRIBUTE,
-  TRANSLATION_PENDING_ATTRIBUTE,
-} from "@/utils/constants/dom-labels"
-import { flushBatchedOperations } from "../../../dom/batch-dom"
+import { CONTENT_WRAPPER_CLASS, TRANSLATION_ONLY_ATTRIBUTE } from "@/utils/constants/dom-labels"
+import { createDOMCommitGroup, flushBatchedOperations } from "../../../dom/batch-dom"
 import {
   removeAllTranslatedWrapperNodes,
   removeTranslatedWrapperWithRestore,
@@ -202,39 +198,12 @@ describe("translationOnly node-identity restore (#1846)", () => {
     expect(p.textContent).toBe("更新后的中文译文")
   })
 
-  it("hides a fresh source run until its first translation is ready", async () => {
-    const p = document.createElement("p")
-    p.textContent = "Freshly opened RSS item"
-    document.body.append(p)
-
-    let resolveTranslation!: (value: string) => void
-    mockTranslateTextForPage.mockReturnValue(
-      new Promise<string>((resolve) => {
-        resolveTranslation = resolve
-      }),
-    )
-
-    const translation = translateNodeTranslationOnlyMode([p], "walk-1", DEFAULT_CONFIG)
-    await vi.waitFor(() => expect(mockTranslateTextForPage).toHaveBeenCalled())
-    flushBatchedOperations()
-
-    expect(p.hasAttribute(TRANSLATION_PENDING_ATTRIBUTE)).toBe(true)
-    expect(getWrappers(p).length).toBe(1)
-
-    resolveTranslation("刚打开的 RSS 条目")
-    await translation
-    flushBatchedOperations()
-
-    expect(p.hasAttribute(TRANSLATION_PENDING_ATTRIBUTE)).toBe(false)
-    expect(p.textContent).toBe("刚打开的 RSS 条目")
-  })
-
-  it("keeps a shared parent pending until every fresh run is ready", async () => {
-    const container = document.createElement("div")
-    const first = document.createTextNode("First dynamic run")
-    const second = document.createTextNode("Second dynamic run")
-    container.append(first, second)
-    document.body.append(container)
+  it("keeps fresh source visible and commits a viewport group together", async () => {
+    const first = document.createElement("p")
+    const second = document.createElement("p")
+    first.textContent = "First dynamic paragraph"
+    second.textContent = "Second dynamic paragraph"
+    document.body.append(first, second)
 
     let resolveFirst!: (value: string) => void
     let resolveSecond!: (value: string) => void
@@ -250,25 +219,98 @@ describe("translationOnly node-identity restore (#1846)", () => {
         }),
       )
 
-    const firstTranslation = translateNodeTranslationOnlyMode([first], "walk-first", DEFAULT_CONFIG)
+    const commitGroup = createDOMCommitGroup()
+    const firstTranslation = translateNodeTranslationOnlyMode(
+      [first],
+      "walk-first",
+      DEFAULT_CONFIG,
+      false,
+      commitGroup,
+    )
     const secondTranslation = translateNodeTranslationOnlyMode(
       [second],
       "walk-second",
       DEFAULT_CONFIG,
+      false,
+      commitGroup,
     )
     await vi.waitFor(() => expect(mockTranslateTextForPage).toHaveBeenCalledTimes(2))
     flushBatchedOperations()
-    expect(container.hasAttribute(TRANSLATION_PENDING_ATTRIBUTE)).toBe(true)
+    expect(first.textContent).toBe("First dynamic paragraph")
+    expect(second.textContent).toBe("Second dynamic paragraph")
 
     resolveFirst("第一段译文")
     await firstTranslation
     flushBatchedOperations()
-    expect(container.hasAttribute(TRANSLATION_PENDING_ATTRIBUTE)).toBe(true)
+    expect(first.textContent).toBe("First dynamic paragraph")
+    expect(second.textContent).toBe("Second dynamic paragraph")
 
     resolveSecond("第二段译文")
     await secondTranslation
     flushBatchedOperations()
-    expect(container.hasAttribute(TRANSLATION_PENDING_ATTRIBUTE)).toBe(false)
+    expect(first.textContent).toBe("First dynamic paragraph")
+    expect(second.textContent).toBe("Second dynamic paragraph")
+
+    commitGroup.commit()
+    flushBatchedOperations()
+    expect(first.textContent).toBe("第一段译文")
+    expect(second.textContent).toBe("第二段译文")
+  })
+
+  it("keeps fallback output out of the visible DOM until its group commits", async () => {
+    const p = document.createElement("p")
+    const bold = document.createElement("b")
+    bold.textContent = "Bold lead"
+    p.append(bold, document.createTextNode(" tail text"))
+    document.body.append(p)
+
+    const commitGroup = createDOMCommitGroup()
+    mockTranslateTextForPage.mockResolvedValue("结构不同的译文")
+    await translateNodeTranslationOnlyMode([p], "walk-1", DEFAULT_CONFIG, false, commitGroup)
+    flushBatchedOperations()
+
+    expect(p.textContent).toBe("Bold lead tail text")
+    expect(p.contains(bold)).toBe(true)
+    expect(getWrappers(p)[0]?.textContent).toBe("")
+
+    commitGroup.commit()
+    flushBatchedOperations()
+    expect(p.textContent).toBe("结构不同的译文")
+    expect(p.contains(bold)).toBe(false)
+  })
+
+  it("discards a pending commit group without changing readable source", async () => {
+    const p = document.createElement("p")
+    p.textContent = "Source survives cancellation"
+    document.body.append(p)
+
+    const commitGroup = createDOMCommitGroup()
+    await translateNodeTranslationOnlyMode([p], "walk-1", DEFAULT_CONFIG, false, commitGroup)
+    flushBatchedOperations()
+
+    commitGroup.discard()
+    flushBatchedOperations()
+    expect(p.textContent).toBe("Source survives cancellation")
+    expect(getWrappers(p)).toEqual([])
+  })
+
+  it("revalidates the source snapshot when a delayed group commits", async () => {
+    const p = document.createElement("p")
+    p.textContent = "Source before provider response"
+    const textNode = p.firstChild as Text
+    document.body.append(p)
+
+    const commitGroup = createDOMCommitGroup()
+    await translateNodeTranslationOnlyMode([p], "walk-1", DEFAULT_CONFIG, false, commitGroup)
+    flushBatchedOperations()
+
+    textNode.data = "Host changed source before commit"
+    commitGroup.commit()
+    flushBatchedOperations()
+
+    expect(p.textContent).toBe("Host changed source before commit")
+    expect(getWrappers(p)).toEqual([])
+    expect(p.hasAttribute(TRANSLATION_ONLY_ATTRIBUTE)).toBe(false)
   })
 
   it("does not remove originals when cleanup ran while translation was in flight", async () => {
@@ -291,7 +333,6 @@ describe("translationOnly node-identity restore (#1846)", () => {
 
     removeAllTranslatedWrapperNodes(document)
     flushBatchedOperations()
-    expect(p.hasAttribute(TRANSLATION_PENDING_ATTRIBUTE)).toBe(false)
 
     resolveTranslation("中文译文")
     await translation

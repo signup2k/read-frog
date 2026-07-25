@@ -2,6 +2,7 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { DEFAULT_CONFIG } from "@/utils/constants/config"
+import { flushBatchedOperations } from "@/utils/host/dom/batch-dom"
 import {
   markExtensionDrivenNodeRemoval,
   registerBilingualTranslationState,
@@ -134,13 +135,18 @@ class MockIntersectionObserver {
   }
 
   async triggerIntersect(target: Element): Promise<void> {
+    await this.triggerIntersections([target])
+  }
+
+  async triggerIntersections(targets: Element[]): Promise<void> {
     this.callback(
-      [
-        {
-          isIntersecting: true,
-          target,
-        } as IntersectionObserverEntry,
-      ],
+      targets.map(
+        (target) =>
+          ({
+            isIntersecting: true,
+            target,
+          }) as IntersectionObserverEntry,
+      ),
       this as unknown as IntersectionObserver,
     )
   }
@@ -298,6 +304,60 @@ describe("pageTranslationManager mutation re-walk", () => {
       expect.anything(),
       expect.anything(),
     )
+
+    manager.stop()
+  })
+
+  it("commits one translation-only intersection batch after every target settles", async () => {
+    const translationOnlyConfig = {
+      ...DEFAULT_CONFIG,
+      translate: {
+        ...DEFAULT_CONFIG.translate,
+        mode: "translationOnly" as const,
+      },
+    }
+    mockGetLocalConfig.mockResolvedValue(translationOnlyConfig)
+    document.body.innerHTML = `
+      <p id="first">First visible paragraph</p>
+      <p id="second">Second visible paragraph</p>
+    `
+
+    const committedTargets: string[] = []
+    const resolvers = new Map<string, () => void>()
+    mockTranslateWalkedElement.mockImplementation(
+      async (target: HTMLElement, _walkId, _config, _toggle, _pacer, _isCurrent, commitGroup) =>
+        new Promise<void>((resolve) => {
+          resolvers.set(target.id, () => {
+            commitGroup.stage(() => committedTargets.push(target.id))
+            resolve()
+          })
+        }),
+    )
+
+    const manager = new PageTranslationManager()
+    await manager.start()
+    await flushDomUpdates()
+
+    const first = document.getElementById("first") as HTMLElement
+    const second = document.getElementById("second") as HTMLElement
+    const observer = intersectionObservers[0]
+    await observer.triggerIntersections([first, second])
+    await flushDomUpdates()
+
+    expect(mockTranslateWalkedElement).toHaveBeenCalledTimes(2)
+    expect(mockTranslateWalkedElement.mock.calls[0][6]).toBe(
+      mockTranslateWalkedElement.mock.calls[1][6],
+    )
+
+    resolvers.get("first")!()
+    await flushDomUpdates()
+    flushBatchedOperations()
+    expect(committedTargets).toEqual([])
+
+    resolvers.get("second")!()
+    await flushDomUpdates()
+    flushBatchedOperations()
+    expect(committedTargets).toEqual(["first", "second"])
 
     manager.stop()
   })
