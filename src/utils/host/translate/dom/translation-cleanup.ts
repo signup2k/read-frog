@@ -282,7 +282,7 @@ export function dropTranslationOnlySwapRecordsForNodes(
 export function restoreTranslationOnlySwapsForAnchor(
   anchor: HTMLElement,
   filterNodes?: readonly ChildNode[],
-  options?: { keepRecords?: boolean },
+  options?: { keepRecords?: boolean; refreshExpectedText?: boolean },
 ): boolean {
   const state = getTranslationOnlyAnchorState(anchor)
   if (!state) {
@@ -311,12 +311,58 @@ export function restoreTranslationOnlySwapsForAnchor(
 
   toRestore.forEach(restoreSwapRecord)
   if (options?.keepRecords) {
-    toRestore.forEach(refreshTranslationOnlySwapRecordExpectedText)
+    if (options.refreshExpectedText !== false) {
+      toRestore.forEach(refreshTranslationOnlySwapRecordExpectedText)
+    }
   } else {
     dropTranslationOnlySwapRecords(state, toRestore)
     finalizeTranslationOnlyAnchorIfEmpty(state)
   }
   return true
+}
+
+/**
+ * Put a kept swap back on screen after its source values have been captured
+ * for retranslation. This keeps the previous translation visible while the
+ * provider request is pending. Every write is guarded so a host update that
+ * lands during the same turn remains authoritative.
+ */
+export function replayTranslationOnlySwapsForAnchor(
+  anchor: HTMLElement,
+  filterNodes?: readonly ChildNode[],
+): boolean {
+  const state = getTranslationOnlyAnchorState(anchor)
+  if (!state) return false
+
+  const toReplay = state.swaps.filter(
+    (record) => !filterNodes || swapRecordIntersectsNodes(record, filterNodes),
+  )
+  if (toReplay.length === 0) return false
+
+  let didReplay = false
+  for (const record of toReplay) {
+    let didReplayRecord = false
+    for (const item of record.items) {
+      if (!item.node.isConnected || item.node.data !== item.originalValue) continue
+      markExtensionDrivenCharacterData(item.node, item.translatedValue)
+      item.node.data = item.translatedValue
+      didReplay = true
+      didReplayRecord = true
+    }
+    for (const item of record.attributeItems) {
+      if (
+        !item.element.isConnected ||
+        item.element.getAttribute(item.name) !== item.originalValue
+      ) {
+        continue
+      }
+      item.element.setAttribute(item.name, item.translatedValue)
+      didReplay = true
+      didReplayRecord = true
+    }
+    if (didReplayRecord) refreshTranslationOnlySwapRecordExpectedText(record)
+  }
+  return didReplay
 }
 
 /**

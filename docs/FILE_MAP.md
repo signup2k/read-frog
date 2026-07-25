@@ -119,6 +119,23 @@ Structure:
   Depends on: config storage, provider resolution, site rules, DOM walker/translator modules.
   Gotchas: provider and mode are consumed in several asynchronous callbacks, not only at initial start.
 
+## src/utils/host/translate
+
+### src/utils/host/translate/core/translation-modes.ts (~890 lines, ts, map-updated 2026-07-25)
+
+Purpose: implements bilingual and translation-only DOM rendering, filtering, provider requests, and guarded retranslation.
+Structure: bilingual mode (L400), translation-only mode (L590).
+Gotchas: translation-only refresh restores source values to prepare the request, then replays the previous swap so users do not see source text while the provider is pending.
+
+### src/utils/host/translate/dom/translation-cleanup.ts (~410 lines, ts, map-updated 2026-07-25)
+
+Purpose: removes translation UI and safely restores displaced nodes or in-place text swaps.
+Structure: wrapper restore (L185), guarded swap restore/replay (L223-L355), global cleanup (L390).
+
+### `src/utils/host/translate/core/__tests__/translation-only-restore.test.ts` (~560 lines, ts, map-updated 2026-07-25)
+
+Purpose: verifies translation-only node identity, guarded restoration, retranslation, and pending-refresh display behavior.
+
 ## Unmapped
 
 The remaining tracked files are intentionally unmapped for this task. Map a file before editing it; prioritize `src/entrypoints`, `src/utils`, and tests touched by the site-binding and personal-extension cleanup.

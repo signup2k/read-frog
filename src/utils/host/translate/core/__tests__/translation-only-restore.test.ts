@@ -168,6 +168,36 @@ describe("translationOnly node-identity restore (#1846)", () => {
     expect(p.hasAttribute(TRANSLATION_ONLY_ATTRIBUTE)).toBe(false)
   })
 
+  it("keeps the previous translation visible while retranslation is pending", async () => {
+    const p = document.createElement("p")
+    p.textContent = "Original sentence"
+    document.body.append(p)
+
+    await translateNodeTranslationOnlyMode([p], "walk-1", DEFAULT_CONFIG)
+    flushBatchedOperations()
+    expect(p.textContent).toBe("中文译文")
+
+    let resolveTranslation!: (value: string) => void
+    mockTranslateTextForPage.mockReturnValue(
+      new Promise<string>((resolve) => {
+        resolveTranslation = resolve
+      }),
+    )
+
+    const retranslation = translateNodeTranslationOnlyMode([p], "walk-2", DEFAULT_CONFIG)
+    await vi.waitFor(() => expect(mockTranslateTextForPage).toHaveBeenCalledTimes(2))
+    flushBatchedOperations()
+
+    expect(p.textContent).toContain("中文译文")
+    expect(p.textContent).not.toContain("Original sentence")
+
+    resolveTranslation("更新后的中文译文")
+    await retranslation
+    flushBatchedOperations()
+
+    expect(p.textContent).toBe("更新后的中文译文")
+  })
+
   it("does not remove originals when cleanup ran while translation was in flight", async () => {
     const p = document.createElement("p")
     p.textContent = "Original sentence"

@@ -28,6 +28,7 @@ import {
   dropVirtualParagraphWrapper,
   removeOrphanVirtualParagraphWrappers,
   removeTranslatedWrapperWithRestore,
+  replayTranslationOnlySwapsForAnchor,
   restoreTranslationOnlySwapsForAnchor,
 } from "../dom/translation-cleanup"
 import { protectTranslationHtmlAttributes } from "../dom/translation-html-attributes"
@@ -725,6 +726,12 @@ export async function translateNodeTranslationOnlyMode(
     // it to detect host mutations that happened while the request was in
     // flight (never swap over content the host has since rewritten).
     const sourceSnapshot = snapshotSourceTextNodes(transNodes)
+    // Source capture above must see the original values, but users should not
+    // watch those values for the duration of the provider request. Repaint the
+    // previous translation now; the response batch restores and replaces it
+    // without yielding a frame in between.
+    const replayedPreviousSwap =
+      restoredOwnSwap && !!swapAnchor && replayTranslationOnlySwapsForAnchor(swapAnchor, transNodes)
 
     const translatedWrapperNode = ownerDoc.createElement("span")
     translatedWrapperNode.className = `${NOTRANSLATE_CLASS} ${CONTENT_WRAPPER_CLASS}`
@@ -819,9 +826,13 @@ export async function translateNodeTranslationOnlyMode(
       // Keep the wrapper when translation failed so the injected error UI remains visible.
       // Only remove the wrapper when translation returned an empty string.
       if (translatedText === "") {
-        markExtensionDrivenNodeRemoval(translatedWrapperNode)
-        // Batch the remove operation to execute remove operation after insert operation
-        batchDOMOperation(() => translatedWrapperNode.remove())
+        batchDOMOperation(() => {
+          if (replayedPreviousSwap && swapAnchor) {
+            restoreTranslationOnlySwapsForAnchor(swapAnchor, transNodes, { keepRecords: true })
+          }
+          markExtensionDrivenNodeRemoval(translatedWrapperNode)
+          translatedWrapperNode.remove()
+        })
       }
       return
     }
@@ -835,6 +846,12 @@ export async function translateNodeTranslationOnlyMode(
         // Wrapper gone: a global cleanup ran while the provider call was in
         // flight, or the host re-rendered the region — leave originals alone.
         if (!translatedWrapperNode.isConnected) return
+        if (replayedPreviousSwap && swapAnchor) {
+          restoreTranslationOnlySwapsForAnchor(swapAnchor, transNodes, {
+            keepRecords: true,
+            refreshExpectedText: false,
+          })
+        }
         markExtensionDrivenNodeRemoval(translatedWrapperNode)
         translatedWrapperNode.remove()
         // Host mutated the run mid-flight: the translation is stale, drop it.
@@ -863,6 +880,12 @@ export async function translateNodeTranslationOnlyMode(
       // call was in flight, or the host re-rendered the region. The originals
       // are the live content — don't remove them to apply a stale translation.
       if (!translatedWrapperNode.isConnected) return
+      if (replayedPreviousSwap && swapAnchor) {
+        restoreTranslationOnlySwapsForAnchor(swapAnchor, transNodes, {
+          keepRecords: true,
+          refreshExpectedText: false,
+        })
+      }
 
       // Insert translated content after the last node
       const lastChildNode = allChildNodes.at(-1)!
