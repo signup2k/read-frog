@@ -1,5 +1,21 @@
 # @read-frog/extension
 
+## 1.42.0
+
+### Minor Changes
+
+- [`72b91fb`](https://github.com/mengxi-ream/read-frog/commit/72b91fbdd8dae6953e130aadbbfadf61d11f162a) Thanks [@signup2k](https://github.com/signup2k)! - feat(extension): add per-site page provider and display mode bindings
+
+  Remove input translation, Translation Hub, account login, and account-backed Notebase saving for a streamlined personal extension.
+
+### Patch Changes
+
+- [`5a50924`](https://github.com/mengxi-ream/read-frog/commit/5a5092411c07aa04c2aa09cd694c7ccab419fb0a) Thanks [@signup2k](https://github.com/signup2k)! - fix(extension): keep the previous translation visible while refreshing translated text
+
+- [`2f6a41f`](https://github.com/mengxi-ream/read-frog/commit/2f6a41f9ad8d70dcd2061036b1209284ceb82afb) Thanks [@signup2k](https://github.com/signup2k)! - fix(extension): commit translation-only viewport batches without blanking readable source text
+
+- [`280ff49`](https://github.com/mengxi-ream/read-frog/commit/280ff497c24c89b448814706104d99483cac42bc) Thanks [@signup2k](https://github.com/signup2k)! - fix(extension): make the translating spinner clearly visible in both light and dark mode by sizing it up and coloring it with the surrounding text color
+
 ## 1.41.2
 
 ### Patch Changes
