@@ -21,8 +21,8 @@ vi.mock("@/utils/host/translate/ui/style-injector", () => ({
 
 describe("spinner", () => {
   beforeEach(() => {
-    document.head.innerHTML = ""
-    document.body.innerHTML = ""
+    document.head.replaceChildren()
+    document.body.replaceChildren()
     ensurePresetStylesMock.mockReset()
     vi.restoreAllMocks()
   })
@@ -71,14 +71,27 @@ describe("spinner", () => {
     expect(spinner.className).toBe("read-frog-spinner")
   }, 10_000)
 
-  it("uses a thin gray spinner arc without a background ring", () => {
+  it("uses a currentColor arc over a faint track ring so it stays visible in any color scheme", () => {
     const spinner = createLightweightSpinner(document)
 
-    expect(spinner.style.borderTopColor).toBe("var(--read-frog-muted-foreground)")
-    expect(spinner.style.borderRightColor).toBe("transparent")
-    expect(spinner.style.borderBottomColor).toBe("transparent")
-    expect(spinner.style.borderLeftColor).toBe("transparent")
-    expect(spinner.style.borderTopWidth).toBe("1.5px")
+    // The arc inherits the surrounding text color (currentColor) so it is as
+    // visible as the text itself in light mode, dark mode, and on host pages
+    // with custom themes.
+    expect(spinner.style.borderTopColor).toBe("currentcolor")
+    expect(spinner.style.borderTopWidth).toBe("2px")
+    expect(spinner.style.width).toBe("10px")
+    expect(spinner.style.height).toBe("10px")
+    // A faint track ring (instead of transparent sides) keeps the loading
+    // state readable even when the arc is at the bottom of its rotation.
+    expect(spinner.style.borderRightColor).toContain(
+      "color-mix(in srgb, currentcolor 25%, transparent)",
+    )
+    expect(spinner.style.borderBottomColor).toContain(
+      "color-mix(in srgb, currentcolor 25%, transparent)",
+    )
+    expect(spinner.style.borderLeftColor).toContain(
+      "color-mix(in srgb, currentcolor 25%, transparent)",
+    )
   })
 
   it("keeps the gray segment visible when reduced motion is enabled", () => {
@@ -107,7 +120,11 @@ describe("spinner", () => {
     const spinner = createLightweightSpinner(document)
 
     expect(animateMock).not.toHaveBeenCalled()
-    expect(spinner.style.borderTopColor).toBe("var(--read-frog-muted-foreground)")
+    // Static arc + track ring from the inline styles keep the state visible.
+    expect(spinner.style.borderTopColor).toBe("currentcolor")
+    expect(spinner.style.borderRightColor).toContain(
+      "color-mix(in srgb, currentcolor 25%, transparent)",
+    )
   })
 })
 
@@ -173,10 +190,13 @@ describe("spinner animation registry (#1881)", () => {
     }
     expect(animateMock).toHaveBeenCalledTimes(MAX_ANIMATED_SPINNERS)
 
-    // Above the cap: static muted ring, no new animation.
+    // Above the cap: static ring (arc + track), no new animation.
     const overCap = makeSpinner()
     expect(animateMock).toHaveBeenCalledTimes(MAX_ANIMATED_SPINNERS)
-    expect(overCap.style.borderTopColor).toBe("var(--read-frog-muted-foreground)")
+    expect(overCap.style.borderTopColor).toBe("currentcolor")
+    expect(overCap.style.borderRightColor).toContain(
+      "color-mix(in srgb, currentcolor 25%, transparent)",
+    )
 
     // Cancelling one frees a slot for the next spinner.
     cancelSpinnerAnimation(createdSpinners[0])

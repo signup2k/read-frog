@@ -55,22 +55,27 @@ export function createLightweightSpinner(ownerDoc: Document): HTMLElement {
   const spinner = ownerDoc.createElement("span")
   spinner.className = SPINNER_CLASS
   // Inline styles keep the spinner resilient against host page CSS overrides.
-  // Use a thin muted arc with transparent sides so bulk page translation does
-  // not paint a dense field of high-contrast rings across the screen.
+  // The arc uses currentColor so it inherits the surrounding paragraph's text
+  // color — it stays as visible as the text itself in light mode, dark mode,
+  // and on host pages with their own color schemes. A faint track ring (25%
+  // of the text color) keeps the loading state readable even when the arc is
+  // at the bottom of its rotation or the spin animation is disabled.
   spinner.style.cssText = `
     display: inline-block !important;
-    width: 6px !important;
-    height: 6px !important;
-    min-width: 6px !important;
-    min-height: 6px !important;
-    max-width: 6px !important;
-    max-height: 6px !important;
+    width: 10px !important;
+    height: 10px !important;
+    min-width: 10px !important;
+    min-height: 10px !important;
+    max-width: 10px !important;
+    max-height: 10px !important;
     aspect-ratio: 1 / 1 !important;
     margin: 0 4px !important;
     padding: 0 !important;
     vertical-align: middle !important;
-    border: 1.5px solid transparent !important;
-    border-top: 1.5px solid var(--read-frog-muted-foreground) !important;
+    border-top: 2px solid currentColor !important;
+    border-right: 2px solid color-mix(in srgb, currentColor 25%, transparent) !important;
+    border-bottom: 2px solid color-mix(in srgb, currentColor 25%, transparent) !important;
+    border-left: 2px solid color-mix(in srgb, currentColor 25%, transparent) !important;
     border-radius: 50% !important;
     box-sizing: content-box !important;
     flex-shrink: 0 !important;
@@ -98,12 +103,10 @@ export function createLightweightSpinner(ownerDoc: Document): HTMLElement {
     )
     spinnerAnimations.set(spinner, animation)
     activeSpinnerAnimationCount++
-  } else {
-    // For reduced motion or when Web Animations API isn't available,
-    // keep a static muted segment so the loading state stays visible
-    // without requiring animation.
-    spinner.style.borderTopColor = "var(--read-frog-muted-foreground)"
   }
+  // For reduced motion or when Web Animations API isn't available, no
+  // animation is started: the static arc + faint track ring from the
+  // inline styles above keep the loading state visible without motion.
 
   return spinner
 }
