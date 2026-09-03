@@ -1,4 +1,3 @@
-import type { GeneratedI18nStructure } from "#i18n"
 import type { ProviderConfig, ProvidersConfig } from "@/types/config/provider"
 import type { Theme } from "@/types/config/theme"
 import type { FeatureKey } from "@/utils/constants/feature-providers"
@@ -6,19 +5,10 @@ import type {
   ProviderSelectorItem,
   ProviderSelectorOption,
 } from "@/utils/providers/provider-display"
-import readFrogLogo from "@/assets/providers/read-frog-provider.png?url&no-inline"
-import { isLLMProviderConfig, isTranslateProviderConfig } from "@/types/config/provider"
-import { i18n } from "@/utils/i18n"
+import { isTranslateProviderConfig } from "@/types/config/provider"
 
-// Keep the persisted provider ID stable so existing user configurations continue to work.
-export const BUILT_IN_AI_PROVIDER_ID = "read-frog-free-ai"
-export const BUILT_IN_AI_PROVIDER_LOGO = readFrogLogo
-
-const BUILT_IN_AI_PROVIDER_NAME_KEY = "options.apiProviders.providers.name.builtInAi"
-const BUILT_IN_AI_PROVIDER_FALLBACK_NAME = "Built-in AI"
-
-export type ProviderCapability = FeatureKey | "selectionToolbar.customAction"
-type SystemProviderNameKey = keyof GeneratedI18nStructure
+export type ProviderCapability = FeatureKey
+type SystemProviderNameKey = string
 type ProviderConfigPredicate<T extends ProviderConfig = ProviderConfig> = (
   provider: ProviderConfig,
 ) => provider is T
@@ -48,21 +38,11 @@ export type ResolvedProviderRef<T extends ProviderConfig = ProviderConfig> =
   | LocalProviderRef<T>
   | SystemProviderRef
 
-const SYSTEM_PROVIDER_DEFS = {
-  [BUILT_IN_AI_PROVIDER_ID]: {
-    id: BUILT_IN_AI_PROVIDER_ID,
-    nameKey: BUILT_IN_AI_PROVIDER_NAME_KEY,
-    fallbackName: BUILT_IN_AI_PROVIDER_FALLBACK_NAME,
-    capabilities: ["selectionToolbar.customAction"],
-    logo: () => BUILT_IN_AI_PROVIDER_LOGO,
-  },
-} as const satisfies Record<string, SystemProviderDef>
+const SYSTEM_PROVIDER_DEFS: Record<string, SystemProviderDef> = {}
 
 const LOCAL_PROVIDER_CAPABILITY_PREDICATES = {
   translate: isTranslateProviderConfig,
   videoSubtitles: isTranslateProviderConfig,
-  "selectionToolbar.translate": isTranslateProviderConfig,
-  "selectionToolbar.customAction": isLLMProviderConfig,
 } as const satisfies Record<ProviderCapability, ProviderConfigPredicate>
 
 export type ProviderConfigForCapability<C extends ProviderCapability> =
@@ -74,21 +54,8 @@ export type ProviderRefForCapability<C extends ProviderCapability> = ResolvedPro
   ProviderConfigForCapability<C>
 >
 
-export type CustomActionProviderRef = ProviderRefForCapability<"selectionToolbar.customAction">
-export type SelectionToolbarTranslateProviderRef =
-  ProviderRefForCapability<"selectionToolbar.translate">
-
 function getSystemProviderName(def: SystemProviderDef): string {
-  return i18n.t(def.nameKey as never) || def.fallbackName
-}
-
-function createSystemProviderSelectorItem(def: SystemProviderDef): ProviderSelectorItem {
-  return {
-    kind: "system",
-    id: def.id,
-    name: getSystemProviderName(def),
-    logo: def.logo,
-  }
+  return def.fallbackName || def.nameKey
 }
 
 function createSystemProviderRef(def: SystemProviderDef): SystemProviderRef {
@@ -101,12 +68,6 @@ function createSystemProviderRef(def: SystemProviderDef): SystemProviderRef {
 
 function getSystemProviderDef(providerId: string): SystemProviderDef | undefined {
   return Object.values(SYSTEM_PROVIDER_DEFS).find((def) => def.id === providerId)
-}
-
-export function isBuiltInAiProviderId(
-  providerId: string,
-): providerId is typeof BUILT_IN_AI_PROVIDER_ID {
-  return providerId === BUILT_IN_AI_PROVIDER_ID
 }
 
 export function isSystemProviderId(providerId: string): boolean {
@@ -172,9 +133,9 @@ export function getSelectableProvidersForCapability(
   capability: ProviderCapability,
   providersConfig: ProvidersConfig,
 ): ProviderSelectorOption[] {
-  const systemProviders = Object.values(SYSTEM_PROVIDER_DEFS)
+  const systemProviders: ProviderSelectorItem[] = Object.values(SYSTEM_PROVIDER_DEFS)
     .filter((def) => def.capabilities.includes(capability))
-    .map(createSystemProviderSelectorItem)
+    .map((def) => ({ kind: "system" as const, id: def.id, name: getSystemProviderName(def), logo: def.logo }))
 
   const localProviders = providersConfig.filter(
     (provider) =>

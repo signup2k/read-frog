@@ -3,10 +3,8 @@ import type {
   CustomLLMProviderConfig,
   LLMProviderConfig,
   NonAPIProviderConfig,
-  NonCustomLLMProviderConfig,
   ProviderConfig,
   PureAPIProviderConfig,
-  TopLevelReasoningProviderConfig,
   TranslateProviderConfig,
 } from "./schemas"
 import {
@@ -14,15 +12,12 @@ import {
   isCustomLLMProvider,
   isLLMProvider,
   isNonAPIProvider,
-  isNonCustomLLMProvider,
   isPureAPIProvider,
   isPureTranslateProvider,
   isTranslateProvider,
-  supportsTopLevelReasoning,
 } from "./constants"
 
 export * from "./constants"
-export * from "./provider-specific-settings"
 export * from "./schemas"
 
 export function isTranslateProviderConfig(
@@ -35,22 +30,10 @@ export function isLLMProviderConfig(config: ProviderConfig): config is LLMProvid
   return isLLMProvider(config.provider)
 }
 
-export function isTopLevelReasoningProviderConfig(
-  config: LLMProviderConfig,
-): config is TopLevelReasoningProviderConfig {
-  return supportsTopLevelReasoning(config.provider)
-}
-
 export function isCustomLLMProviderConfig(
   config: ProviderConfig,
 ): config is CustomLLMProviderConfig {
   return isCustomLLMProvider(config.provider)
-}
-
-export function isNonCustomLLMProviderConfig(
-  config: ProviderConfig,
-): config is NonCustomLLMProviderConfig {
-  return isNonCustomLLMProvider(config.provider)
 }
 
 export function isAPIProviderConfig(config: ProviderConfig): config is APIProviderConfig {

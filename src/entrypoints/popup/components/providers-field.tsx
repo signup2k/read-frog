@@ -36,13 +36,6 @@ function getSelectedProviderOptions(config: Config, providersConfig: ProvidersCo
     addProvider(featureKey, FEATURE_PROVIDER_DEFS[featureKey].getProviderId(config))
   }
 
-  for (const action of config.selectionToolbar.customActions) {
-    if (action.enabled === false) {
-      continue
-    }
-    addProvider("selectionToolbar.customAction", action.providerId)
-  }
-
   return selectedProviders
 }
 

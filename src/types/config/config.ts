@@ -2,22 +2,15 @@ import { langCodeISO6393Schema, langLevel } from "@read-frog/definitions"
 import { z } from "zod"
 import { FEATURE_KEYS, FEATURE_PROVIDER_DEFS } from "@/utils/constants/feature-providers"
 import {
-  MAX_SELECTION_OVERLAY_OPACITY,
-  MIN_SELECTION_OVERLAY_OPACITY,
-} from "@/utils/constants/selection"
-import { MIN_SIDE_CONTENT_WIDTH } from "@/utils/constants/side"
-import {
   doesProviderSupportsCapability,
   getProviderIdsForCapability,
 } from "@/utils/providers/provider-registry"
 import { floatingButtonSchema } from "./floating-button"
 import { languageDetectionConfigSchema } from "./language-detection"
 import { isLLMProvider, providersConfigSchema } from "./provider"
-import { selectionToolbarCustomActionsSchema } from "./selection-toolbar"
 import { siteRulesConfigSchema } from "./site-rules"
 import { videoSubtitlesSchema } from "./subtitles"
-import { pageTranslationShortcutSchema, translateConfigSchema } from "./translate"
-import { ttsConfigSchema } from "./tts"
+import { translateConfigSchema } from "./translate"
 // Language schema
 const languageSchema = z.object({
   sourceCode: langCodeISO6393Schema.or(z.literal("auto")),
@@ -25,31 +18,9 @@ const languageSchema = z.object({
   level: langLevel,
 })
 
-const selectionToolbarFeatureSchema = z.object({
-  enabled: z.boolean(),
-  providerId: z.string().nonempty(),
-  shortcut: pageTranslationShortcutSchema,
-})
-
-const selectionToolbarSpeakFeatureSchema = z.object({
-  enabled: z.boolean(),
-})
-
-// Text selection toolbar schema
-const selectionToolbarSchema = z.object({
-  enabled: z.boolean(),
-  disabledSelectionToolbarPatterns: z.array(z.string()),
-  opacity: z.number().min(MIN_SELECTION_OVERLAY_OPACITY).max(MAX_SELECTION_OVERLAY_OPACITY),
-  features: z.object({
-    translate: selectionToolbarFeatureSchema,
-    speak: selectionToolbarSpeakFeatureSchema,
-  }),
-  customActions: selectionToolbarCustomActionsSchema,
-})
-
 // side content schema
 const sideContentSchema = z.object({
-  width: z.number().min(MIN_SIDE_CONTENT_WIDTH),
+  width: z.number(),
 })
 
 // beta experience schema
@@ -87,9 +58,7 @@ export const configSchema = z
     providersConfig: providersConfigSchema,
     translate: translateConfigSchema,
     languageDetection: languageDetectionConfigSchema,
-    tts: ttsConfigSchema,
     floatingButton: floatingButtonSchema,
-    selectionToolbar: selectionToolbarSchema,
     sideContent: sideContentSchema,
     betaExperience: betaExperienceSchema,
     contextMenu: contextMenuSchema,
@@ -155,29 +124,6 @@ export const configSchema = z
         }
       }
     }
-
-    data.selectionToolbar.customActions.forEach((action, index) => {
-      const providerId = action.providerId
-      if (
-        !doesProviderSupportsCapability(
-          "selectionToolbar.customAction",
-          data.providersConfig,
-          providerId,
-          { requireEnable: true },
-        )
-      ) {
-        ctx.addIssue({
-          code: "invalid_value",
-          values: getProviderIdsForCapability(
-            "selectionToolbar.customAction",
-            data.providersConfig,
-            { requireEnable: true },
-          ),
-          message: `Invalid provider id "${providerId}".`,
-          path: ["selectionToolbar", "customActions", index, "providerId"],
-        })
-      }
-    })
   })
 
 export type Config = z.infer<typeof configSchema>

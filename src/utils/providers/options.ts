@@ -1,5 +1,5 @@
 import type { JSONValue } from "ai"
-import { CUSTOM_LLM_PROVIDER_TYPES, supportsTopLevelReasoning } from "@/types/config/provider"
+import { CUSTOM_LLM_PROVIDER_TYPES } from "@/types/config/provider"
 import { LLM_MODEL_OPTIONS } from "../constants/models"
 
 export interface RecommendedProviderOptionsMatch {
@@ -14,20 +14,6 @@ const OPENAI_COMPATIBLE_OPTION_ALIASES = {
   verbosity: "textVerbosity",
 } as const satisfies Record<string, string>
 
-const REASONING_PROVIDER_OPTION_KEYS = new Set([
-  "enableThinking",
-  "reasoningEffort",
-  "reasoningHistory",
-  "thinking",
-  "thinkingConfig",
-])
-
-function containsOnlyReasoningProviderOptions(options: Record<string, JSONValue>): boolean {
-  return (
-    Object.keys(options).length > 0 &&
-    Object.keys(options).every((key) => REASONING_PROVIDER_OPTION_KEYS.has(key))
-  )
-}
 
 function normalizeUserProviderOptions(
   provider: string,
@@ -104,7 +90,6 @@ export function getProviderOptionsWithOverride(
   model: string,
   provider: string,
   userOptions?: Record<string, JSONValue>,
-  reasoning?: string,
 ): Record<string, Record<string, JSONValue>> | undefined {
   if (userOptions !== undefined) {
     return { [provider]: normalizeUserProviderOptions(provider, userOptions) }
@@ -112,14 +97,6 @@ export function getProviderOptionsWithOverride(
 
   const recommendedOptions = getRecommendedProviderOptions(model)
   if (!recommendedOptions) {
-    return undefined
-  }
-
-  if (
-    reasoning !== undefined &&
-    supportsTopLevelReasoning(provider) &&
-    containsOnlyReasoningProviderOptions(recommendedOptions)
-  ) {
     return undefined
   }
 

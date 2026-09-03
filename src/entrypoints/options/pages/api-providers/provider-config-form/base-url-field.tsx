@@ -1,9 +1,7 @@
 import type { APIProviderConfig } from "@/types/config/provider"
 import { useSelector } from "@tanstack/react-store"
-import { isNonCustomLLMProvider } from "@/types/config/provider"
 import { PROVIDER_BASE_URL_PLACEHOLDERS } from "@/utils/constants/providers"
 import { i18n } from "@/utils/i18n"
-import { ConnectionTestButton } from "./components/connection-button"
 import { withForm } from "./form"
 
 export const BaseURLField = withForm({
@@ -16,7 +14,7 @@ export const BaseURLField = withForm({
       return null
     }
 
-    const isOptionalBaseURL = isNonCustomLLMProvider(providerType)
+    const isOptionalBaseURL = providerType === "openai-compatible"
     const labelText = `${i18n.t("options.apiProviders.form.fields.baseURL")}${
       isOptionalBaseURL ? ` (${i18n.t("options.apiProviders.form.fields.optional")})` : ""
     }`
@@ -28,9 +26,6 @@ export const BaseURLField = withForm({
             formForSubmit={form}
             label={labelText}
             placeholder={PROVIDER_BASE_URL_PLACEHOLDERS[providerType]}
-            labelExtra={
-              providerType === "ollama" && <ConnectionTestButton providerConfig={providerConfig} />
-            }
           />
         )}
       </form.AppField>

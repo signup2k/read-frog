@@ -164,45 +164,6 @@ export function findFeatureMissingProvider(
 }
 
 /**
- * Reassign selection toolbar custom actions that reference the deleted provider.
- * Fallback target must be the first enabled LLM provider.
- * Returns null when no custom action is affected or when no fallback exists.
- */
-export function computeSelectionToolbarCustomActionFallbacksAfterDeletion(
-  deletedProviderId: string,
-  config: Config,
-  remainingProviders: ProvidersConfig,
-): Config["selectionToolbar"]["customActions"] | null {
-  const hasAffectedCustomAction = config.selectionToolbar.customActions.some(
-    (action) => action.providerId === deletedProviderId,
-  )
-
-  if (!hasAffectedCustomAction) {
-    return null
-  }
-
-  const fallbackProviderId = getProviderIdsForCapability(
-    "selectionToolbar.customAction",
-    remainingProviders,
-    { requireEnable: true },
-  )[0]
-  if (!fallbackProviderId) {
-    return null
-  }
-
-  return config.selectionToolbar.customActions.map((action) => {
-    if (action.providerId !== deletedProviderId) {
-      return action
-    }
-
-    return {
-      ...action,
-      providerId: fallbackProviderId,
-    }
-  })
-}
-
-/**
  * Compute languageDetection fallback when a provider is deleted.
  * Only applies when mode is "llm" and the deleted provider is the current one.
  * Returns the new providerId (first enabled LLM), or undefined if none available.

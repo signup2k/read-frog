@@ -5,7 +5,6 @@ import { extractAISDKErrorMessage } from "@/utils/error/extract-message"
 import { getModelById } from "@/utils/providers/model"
 import { resolveModelId } from "@/utils/providers/model-id"
 import { getProviderOptionsWithOverride } from "@/utils/providers/options"
-import { getTopLevelReasoning } from "@/utils/providers/reasoning"
 import { attachRequestErrorMeta, getRequestErrorMeta } from "@/utils/request/retry-policy"
 
 const THINK_TAG_RE = /<\/think>([\s\S]*)/
@@ -30,7 +29,6 @@ export async function aiTranslate<TContext>(
     providerOptions: userProviderOptions,
     temperature,
   } = providerConfig
-  const reasoning = getTopLevelReasoning(providerConfig)
   const modelName = resolveModelId(providerModel)
   const model = await getModelById(providerId)
 
@@ -38,7 +36,6 @@ export async function aiTranslate<TContext>(
     modelName ?? "",
     provider,
     userProviderOptions,
-    reasoning,
   )
   const { systemPrompt, prompt } = await promptResolver(targetLangName, text, options)
 
@@ -47,7 +44,6 @@ export async function aiTranslate<TContext>(
       model,
       instructions: systemPrompt,
       prompt,
-      reasoning,
       temperature,
       providerOptions,
       abortSignal: options?.signal,

@@ -8,7 +8,6 @@ import { getSubtitlesSegmentationPrompt } from "@/utils/prompts/subtitles-segmen
 import { getModelById } from "@/utils/providers/model"
 import { resolveModelId } from "@/utils/providers/model-id"
 import { getProviderOptionsWithOverride } from "@/utils/providers/options"
-import { getTopLevelReasoning } from "@/utils/providers/reasoning"
 import { ensureInitializedConfig } from "./config"
 
 const VTT_CODE_BLOCK_RE = /```vtt\n?/g
@@ -80,13 +79,11 @@ export async function runAiSegmentSubtitles(data: AiSegmentSubtitlesData): Promi
     providerOptions: userProviderOptions,
     temperature,
   } = providerConfig
-  const reasoning = getTopLevelReasoning(providerConfig)
   const modelName = resolveModelId(providerModel)
   const providerOptions = getProviderOptionsWithOverride(
     modelName ?? "",
     provider,
     userProviderOptions,
-    reasoning,
   )
   const model = await getModelById(providerId)
 
@@ -97,7 +94,6 @@ export async function runAiSegmentSubtitles(data: AiSegmentSubtitlesData): Promi
       model,
       instructions: systemPrompt,
       prompt,
-      reasoning,
       temperature,
       providerOptions,
       maxRetries: 0,

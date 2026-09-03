@@ -24,7 +24,6 @@ interface FeatureProviderSelectorListProps {
   className?: string
   providerSelectorClassName?: string
   providerSelectorTriggerSize?: ProviderSelectorTriggerSize
-  includeCustomActions?: boolean
   renderApiKeyWarning?: (providerConfig: ProviderConfig | null) => ReactNode
 }
 
@@ -77,79 +76,10 @@ function FeatureProviderField({
   )
 }
 
-function CustomActionProviderFields({
-  providerSelectorClassName,
-  providerSelectorTriggerSize,
-  renderApiKeyWarning,
-}: {
-  providerSelectorClassName?: string
-  providerSelectorTriggerSize?: ProviderSelectorTriggerSize
-  renderApiKeyWarning?: (providerConfig: ProviderConfig | null) => ReactNode
-}) {
-  const config = useAtomValue(configAtom)
-  const setConfig = useSetAtom(writeConfigAtom)
-  const providersConfig = useAtomValue(configFieldsAtomMap.providersConfig)
-
-  const customActionProviders = useMemo(
-    () => getSelectableProvidersForCapability("selectionToolbar.customAction", providersConfig),
-    [providersConfig],
-  )
-
-  const customActions = config.selectionToolbar.customActions.filter(
-    (action) => action.enabled !== false,
-  )
-
-  if (customActions.length === 0) {
-    return null
-  }
-
-  return (
-    <>
-      <p className="text-sm font-medium text-muted-foreground">
-        {i18n.t("options.general.featureProviders.customActions")}
-      </p>
-      {customActions.map((action) => {
-        const currentProviderConfig =
-          getProviderConfigById(providersConfig, action.providerId) ?? null
-        return (
-          <Field key={action.id}>
-            <FieldLabel nativeLabel={false} render={<div />}>
-              {action.name}
-              {renderApiKeyWarning?.(currentProviderConfig)}
-            </FieldLabel>
-            <ProviderSelector
-              providers={customActionProviders}
-              value={action.providerId}
-              onChange={(id) => {
-                const updatedCustomActions = config.selectionToolbar.customActions.map((item) =>
-                  item.id === action.id ? { ...item, providerId: id } : item,
-                )
-
-                void setConfig({
-                  selectionToolbar: {
-                    ...config.selectionToolbar,
-                    customActions: updatedCustomActions,
-                  },
-                })
-              }}
-              className={providerSelectorClassName}
-              triggerSize={providerSelectorTriggerSize}
-              placeholder={i18n.t(
-                "options.floatingButtonAndToolbar.selectionToolbar.customActions.form.selectProvider",
-              )}
-            />
-          </Field>
-        )
-      })}
-    </>
-  )
-}
-
 export function FeatureProviderSelectorList({
   className,
   providerSelectorClassName = "w-full",
   providerSelectorTriggerSize,
-  includeCustomActions = true,
   renderApiKeyWarning,
 }: FeatureProviderSelectorListProps) {
   return (
@@ -163,13 +93,6 @@ export function FeatureProviderSelectorList({
           renderApiKeyWarning={renderApiKeyWarning}
         />
       ))}
-      {includeCustomActions && (
-        <CustomActionProviderFields
-          providerSelectorClassName={providerSelectorClassName}
-          providerSelectorTriggerSize={providerSelectorTriggerSize}
-          renderApiKeyWarning={renderApiKeyWarning}
-        />
-      )}
     </FieldGroup>
   )
 }

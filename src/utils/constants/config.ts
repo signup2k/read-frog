@@ -1,12 +1,8 @@
 import type { Config } from "@/types/config/config"
 import type { FloatingButtonSide } from "@/types/config/floating-button"
-import type { SelectionToolbarCustomAction } from "@/types/config/selection-toolbar"
 import type { PageTranslateRange } from "@/types/config/translate"
-import { BUILT_IN_AI_PROVIDER_ID } from "@/utils/providers/provider-registry"
-import { CUSTOM_ACTION_TEMPLATES } from "./custom-action-templates"
 import { DEFAULT_TRANSLATE_PROMPTS_CONFIG } from "./prompt"
 import { buildDefaultProviderConfigList, DEFAULT_PROVIDER_CONFIG_LIST } from "./providers"
-import { DEFAULT_SELECTION_OVERLAY_OPACITY } from "./selection"
 import { DEFAULT_SIDE_CONTENT_WIDTH } from "./side"
 import {
   DEFAULT_BACKGROUND_OPACITY,
@@ -27,57 +23,19 @@ import {
   DEFAULT_PRELOAD_THRESHOLD,
   DEFAULT_REQUEST_CAPACITY,
   DEFAULT_REQUEST_RATE,
-  DEFAULT_SELECTION_TRANSLATION_SHORTCUT_KEY,
   DEFAULT_TRANSLATION_MODE_SHORTCUT_KEY,
 } from "./translate"
 import { TRANSLATION_NODE_STYLE_ON_INSTALLED } from "./translation-node-style"
-import { DEFAULT_TTS_CONFIG } from "./tts"
 
 export const CONFIG_STORAGE_KEY = "config"
 export const LAST_SYNCED_CONFIG_STORAGE_KEY = "lastSyncedConfig"
 
 export const THEME_STORAGE_KEY = "theme"
 export const DEFAULT_DETECTED_CODE = "eng" as const
-export const CONFIG_SCHEMA_VERSION = 86
+export const CONFIG_SCHEMA_VERSION = 87
 
 export const DEFAULT_FLOATING_BUTTON_POSITION = 0.66
 export const DEFAULT_FLOATING_BUTTON_SIDE: FloatingButtonSide = "right"
-
-/**
- * Build the default "Dictionary" custom action. Its `name`/`systemPrompt`/`prompt`/output
- * field labels are resolved via `i18n.t` and, once written to a user's config, become
- * frozen user data. To persist them in the user's chosen `uiLanguage` (not whatever the
- * i18next singleton defaulted to at module-import time), `initializeConfig` calls this
- * again after `initI18n` for the config it actually writes on a fresh install.
- *
- * The module-scope `defaultDictionaryAction` below stays (DEFAULT_CONFIG must expose a
- * populated `customActions` for in-memory fallbacks and tests); its strings are only ever
- * a transient fallback, never the persisted value.
- */
-export function createDefaultDictionaryAction(): SelectionToolbarCustomAction | null {
-  const template = CUSTOM_ACTION_TEMPLATES.find((t) => t.id === "dictionary")
-  if (!template) return null
-
-  const action = template.createAction(BUILT_IN_AI_PROVIDER_ID)
-  return {
-    ...action,
-    id: "default-dictionary",
-    outputSchema: action.outputSchema.map((field) => ({
-      ...field,
-      id: field.id.startsWith("dictionary-")
-        ? `default-${field.id}`
-        : `default-dictionary-${field.id}`,
-    })),
-  }
-}
-
-/** Default custom actions for a fresh install, resolved against the current i18next language. */
-export function buildDefaultCustomActions(): SelectionToolbarCustomAction[] {
-  const dictionaryAction = createDefaultDictionaryAction()
-  return dictionaryAction ? [dictionaryAction] : []
-}
-
-const defaultDictionaryAction = createDefaultDictionaryAction()
 
 export const DEFAULT_CONFIG: Config = {
   language: {
@@ -128,7 +86,6 @@ export const DEFAULT_CONFIG: Config = {
   languageDetection: {
     mode: "basic",
   },
-  tts: DEFAULT_TTS_CONFIG,
   floatingButton: {
     enabled: true,
     position: DEFAULT_FLOATING_BUTTON_POSITION,
@@ -136,22 +93,6 @@ export const DEFAULT_CONFIG: Config = {
     disabledFloatingButtonPatterns: [],
     clickAction: "translate",
     locked: false,
-  },
-  selectionToolbar: {
-    enabled: true,
-    disabledSelectionToolbarPatterns: [],
-    opacity: DEFAULT_SELECTION_OVERLAY_OPACITY,
-    features: {
-      translate: {
-        enabled: true,
-        providerId: "microsoft-translate-default",
-        shortcut: DEFAULT_SELECTION_TRANSLATION_SHORTCUT_KEY,
-      },
-      speak: {
-        enabled: true,
-      },
-    },
-    customActions: defaultDictionaryAction ? [defaultDictionaryAction] : [],
   },
   sideContent: {
     width: DEFAULT_SIDE_CONTENT_WIDTH,
@@ -217,10 +158,6 @@ export function buildFreshDefaultConfig(): Config {
   return {
     ...DEFAULT_CONFIG,
     providersConfig: buildDefaultProviderConfigList(),
-    selectionToolbar: {
-      ...DEFAULT_CONFIG.selectionToolbar,
-      customActions: buildDefaultCustomActions(),
-    },
   }
 }
 

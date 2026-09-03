@@ -4,7 +4,6 @@ import { logger } from "@/utils/logger"
 import { getModelById } from "@/utils/providers/model"
 import { resolveModelId } from "@/utils/providers/model-id"
 import { getProviderOptionsWithOverride } from "@/utils/providers/options"
-import { getTopLevelReasoning } from "@/utils/providers/reasoning"
 import { cleanText } from "./utils"
 
 /**
@@ -28,13 +27,11 @@ export async function generateArticleSummary(
       providerOptions: userProviderOptions,
       temperature,
     } = providerConfig
-    const reasoning = getTopLevelReasoning(providerConfig)
     const modelName = resolveModelId(providerModel)
     const providerOptions = getProviderOptionsWithOverride(
       modelName ?? "",
       provider,
       userProviderOptions,
-      reasoning,
     )
     const model = await getModelById(providerConfig.id)
 
@@ -48,7 +45,6 @@ ${preparedText}`
     const { text: summary } = await generateText({
       model,
       prompt,
-      reasoning,
       temperature,
       providerOptions,
     })
