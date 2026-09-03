@@ -1255,7 +1255,13 @@
   {
     "id": "scmp",
     "matches": "www.scmp.com",
-    "includeSelectors": [".info__subHeadline", ".section-content h2"],
+    "includeSelectors": [
+      "[data-qa=\"ContentBody-ContentBodyContainer\"]",
+      "[data-qa=\"ContentSubHeadline-ContainerWithTag\"]",
+      "[data-qa=\"ContentHeadline-ContainerWithTag\"]",
+      ".info__subHeadline",
+      ".section-content h2"
+    ],
     "injectedCss": ".topic__article-list { height: unset; }\n.adverisers__adveriser { height: unset; }\n.advertiser__content { height: unset; }\n.content-title__link { display:unset;overflow:unset;-webkit-line-clamp:unset; }\n.title__text { max-height:unset; -webkit-line-clamp:unset; }\n.news-list-item__news-title { max-height:unset; -webkit-line-clamp:unset; }\na[class*='link'] > .link__headline { max-height:unset; -webkit-line-clamp:unset; }"
   },
   {

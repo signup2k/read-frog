@@ -119,6 +119,30 @@ describe("built-in site rules", () => {
     expect(resolved.excludeSelector).toContain(".navbar")
   })
 
+  it("translates SCMP article bodies on the redesigned Next.js site", async () => {
+    const url =
+      "https://www.scmp.com/news/china/military/article/3362473/what-chinas-hypersonic-anti-ship-missile-fired-smaller-destroyer-signals"
+    const resolved = resolveSiteRule(url, BUILT_IN_SITE_RULES, [], [])
+    expect(resolved.matchedRuleIds).toContain("scmp")
+    // The new site uses data-qa containers; the old .info__subHeadline /
+    // .section-content h2 classes no longer appear in the article body.
+    expect(resolved.includeSelector).toContain('[data-qa="ContentBody-ContentBodyContainer"]')
+    expect(resolved.includeSelector).toContain('[data-qa="ContentSubHeadline-ContainerWithTag"]')
+    expect(resolved.includeSelector).toContain('[data-qa="ContentHeadline-ContainerWithTag"]')
+
+    const body = document.createElement("section")
+    body.setAttribute("data-qa", "ContentBody-ContentBodyContainer")
+    const paragraph = document.createElement("p")
+    paragraph.setAttribute("data-qa", "Component-Component")
+    paragraph.textContent = "A Type 052D destroyer fired a YJ-20 hypersonic anti-ship missile."
+    body.appendChild(paragraph)
+    document.body.appendChild(body)
+
+    const { isWithinIncludeScope } = await import("@/utils/host/dom/filter")
+    const config = { siteRules: { userRules: [], disabledBuiltInRules: [] } } as any
+    expect(isWithinIncludeScope(paragraph, config)).toBe(true)
+  })
+
   it("excludes hltv.org comment metadata bars (floor number, author, time, votes)", () => {
     const resolved = resolveSiteRule(
       "https://www.hltv.org/matches/2395002/furia-vs-falcons-iem-cologne-major-2026",
