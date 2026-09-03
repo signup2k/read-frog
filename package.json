@@ -6,29 +6,12 @@
   "type": "module",
   "scripts": {
     "build": "wxt build",
-    "build:edge": "wxt build -b edge",
-    "build:firefox": "wxt build -b firefox --mv3",
-    "build:analyze": "wxt build --analyze",
-    "dev:local": "WXT_USE_LOCAL_PACKAGES=true wxt",
     "dev": "wxt",
-    "dev:edge": "wxt -b edge",
-    "dev:firefox": "wxt -b firefox --mv3",
     "fmt": "oxfmt --write .",
     "fmt:check": "oxfmt --check .",
-    "lint": "oxlint --type-aware --type-check",
-    "lint:fix": "oxlint --type-aware --fix",
     "postinstall": "WXT_SKIP_ENV_VALIDATION=true wxt prepare",
-    "test": "vitest run",
-    "test:cov": "vitest run --coverage",
-    "test:watch": "vitest",
     "type-check": "oxlint --type-aware --type-check",
-    "scrape:ai-sdk-models": "npx tsx scripts/scrape-ai-sdk-provider-models.ts --out scripts/output/ai-sdk-provider-models.json",
-    "zip": "wxt zip",
-    "zip:edge": "wxt zip -b edge",
-    "zip:firefox": "wxt zip -b firefox --mv3",
-    "zip:all": "pnpm zip && pnpm zip:edge && pnpm zip:firefox",
-    "release": "changeset tag && git push origin --tags",
-    "prepare": "husky"
+    "zip": "wxt zip"
   },
   "dependencies": {
     "@ai-sdk/alibaba": "^2.0.14",
@@ -122,17 +105,9 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@changesets/changelog-github": "^0.7.0",
-    "@changesets/cli": "^2.31.1",
-    "@commitlint/cli": "^21.2.1",
-    "@commitlint/config-conventional": "^21.2.0",
-    "@faker-js/faker": "^10.5.0",
     "@iconify/react": "^6.0.2",
     "@modyfi/vite-plugin-yaml": "^1.1.1",
     "@tailwindcss/postcss": "^4.3.3",
-    "@tanstack/react-query-devtools": "^5.101.2",
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.2",
     "@total-typescript/ts-reset": "^0.6.1",
     "@types/css-tree": "^2.3.11",
     "@types/file-saver": "^2.0.7",
@@ -140,14 +115,8 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
-    "@vitest/coverage-istanbul": "^4.1.10",
     "@wxt-dev/module-react": "^1.2.2",
     "autoprefixer": "^10.5.4",
-    "eruda": "^3.4.3",
-    "husky": "^9.1.7",
-    "jsdom": "^29.1.1",
-    "lint-staged": "^17.0.8",
-    "nx": "^23.1.0",
     "oxfmt": "^0.59.0",
     "oxlint": "^1.74.0",
     "oxlint-plugin-query": "^0.1.1",
@@ -159,7 +128,6 @@
     "type-fest": "^5.8.0",
     "typescript": "^7.0.2",
     "vite": "^8.1.5",
-    "vitest": "^4.1.10",
     "wxt": "0.20.27"
   },
   "devEngines": {
@@ -169,57 +137,5 @@
       "onFail": "download"
     }
   },
-  "packageManager": "pnpm@11.13.1+sha512.b2fc7683b8a6525414e7d13e1ba28caaddde96bf66ec540bfaeb7e702b81f3e0be4d1f295edf7f9fe0396740a8dce4509c582ddf79891f4543fea32d37645f25",
-  "nx": {
-    "targets": {
-      "build": {
-        "executor": "nx:run-commands",
-        "options": {
-          "command": "wxt build"
-        }
-      },
-      "build:firefox": {
-        "executor": "nx:run-commands",
-        "options": {
-          "command": "wxt build -b firefox"
-        }
-      },
-      "test": {
-        "executor": "nx:run-commands",
-        "options": {
-          "command": "vitest run"
-        }
-      },
-      "test:cov": {
-        "executor": "nx:run-commands",
-        "options": {
-          "command": "vitest run --coverage"
-        }
-      },
-      "fmt": {
-        "executor": "nx:run-commands",
-        "options": {
-          "command": "oxfmt --write ."
-        }
-      },
-      "fmt:check": {
-        "executor": "nx:run-commands",
-        "options": {
-          "command": "oxfmt --check ."
-        }
-      },
-      "lint": {
-        "executor": "nx:run-commands",
-        "options": {
-          "command": "oxlint --type-aware --type-check"
-        }
-      },
-      "type-check": {
-        "executor": "nx:run-commands",
-        "options": {
-          "command": "oxlint --type-aware --type-check"
-        }
-      }
-    }
-  }
+  "packageManager": "pnpm@11.13.1+sha512.b2fc7683b8a6525414e7d13e1ba28caaddde96bf66ec540bfaeb7e702b81f3e0be4d1f295edf7f9fe0396740a8dce4509c582ddf79891f4543fea32d37645f25"
 }

@@ -9,8 +9,6 @@ import { onMessage } from "@/utils/message"
 import { openOptionsPage } from "@/utils/navigation"
 import { SessionCacheGroupRegistry } from "@/utils/session-cache/session-cache-group-registry"
 import { runAiSegmentSubtitles } from "./ai-segmentation"
-import { setupAnalyticsMessageHandlers } from "./analytics"
-import { dispatchBackgroundStreamPort } from "./background-stream"
 import { initializeActionIcons, registerActionIconListeners } from "./browser-action-icon"
 import { ensureInitializedConfig } from "./config"
 import { setUpConfigBackup } from "./config-backup"
@@ -21,15 +19,11 @@ import {
   cleanupAllTranslationCache,
   setUpDatabaseCleanup,
 } from "./db-cleanup"
-import { setupEdgeTTSMessageHandlers } from "./edge-tts"
 import { setupIframeInjection } from "./iframe-injection"
 import { setupLLMGenerateTextMessageHandlers } from "./llm-generate-text"
-import { initMockData } from "./mock-data"
 import { proxyFetch } from "./proxy-fetch"
-import { setupSidePanelMessageHandler } from "./side-panel"
 import { setUpSubtitlesTranslationQueue, setUpWebPageTranslationQueue } from "./translation-queues"
 import { translationMessage } from "./translation-signal"
-import { setupTTSPlaybackMessageHandlers } from "./tts-playback"
 
 export default defineBackground({
   type: "module",
@@ -57,12 +51,6 @@ export default defineBackground({
       await openOptionsPage(message.data)
     })
 
-    setupSidePanelMessageHandler({
-      extensionBrowser: browser,
-      logger,
-      registerMessageHandler: onMessage,
-    })
-
     onMessage("aiSegmentSubtitles", async (message) => {
       try {
         return await runAiSegmentSubtitles(message.data)
@@ -70,10 +58,6 @@ export default defineBackground({
         logger.error("[Background] aiSegmentSubtitles failed", error)
         throw error
       }
-    })
-
-    browser.runtime.onConnect.addListener((port) => {
-      dispatchBackgroundStreamPort(port)
     })
 
     onMessage("clearAllTranslationRelatedCache", async () => {
@@ -85,7 +69,6 @@ export default defineBackground({
       await cleanupAllAiSegmentationCache()
     })
 
-    setupAnalyticsMessageHandlers()
     translationMessage()
     registerActionIconListeners()
 
@@ -102,10 +85,7 @@ export default defineBackground({
     setUpConfigBackup()
 
     proxyFetch()
-    setupEdgeTTSMessageHandlers()
     setupLLMGenerateTextMessageHandlers()
-    setupTTSPlaybackMessageHandlers()
-    void initMockData()
 
     // Setup on-demand iframe injection after page translation is enabled.
     setupIframeInjection()

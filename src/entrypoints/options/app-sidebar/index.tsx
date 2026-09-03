@@ -12,7 +12,6 @@ import { i18n } from "@/utils/i18n"
 import { getCommandPaletteShortcutHint } from "@/utils/os"
 import { commandPaletteOpenAtom } from "../command-palette/atoms"
 import { SettingsNav } from "./settings-nav"
-import { WhatsNewFooter } from "./whats-new-footer"
 
 export function AppSidebar() {
   const setCommandPaletteOpen = useSetAtom(commandPaletteOpenAtom)
@@ -38,9 +37,7 @@ export function AppSidebar() {
       <SidebarContent className="transition-all group-data-[state=expanded]:px-2">
         <SettingsNav />
       </SidebarContent>
-      <SidebarFooter className="transition-all group-data-[state=expanded]:px-2">
-        <WhatsNewFooter />
-      </SidebarFooter>
+      <SidebarFooter className="transition-all group-data-[state=expanded]:px-2" />
     </Sidebar>
   )
 }

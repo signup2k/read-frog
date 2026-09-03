@@ -35,7 +35,6 @@ import { DEFAULT_TTS_CONFIG } from "./tts"
 
 export const CONFIG_STORAGE_KEY = "config"
 export const LAST_SYNCED_CONFIG_STORAGE_KEY = "lastSyncedConfig"
-export const GOOGLE_DRIVE_TOKEN_STORAGE_KEY = "__googleDriveToken"
 
 export const THEME_STORAGE_KEY = "theme"
 export const DEFAULT_DETECTED_CODE = "eng" as const

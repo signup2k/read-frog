@@ -1,18 +1,8 @@
-import path from "node:path"
 import process from "node:process"
 import ViteYaml from "@modyfi/vite-plugin-yaml"
 import { defineConfig } from "wxt"
-import { z } from "zod"
-import {
-  createExtensionClientEnvSchema,
-  isLocalPackagesEnabled,
-  resolveExtensionEnv,
-} from "./src/env/shared"
 
 const WXT_API_KEY_PATTERN = /^WXT_.*API_KEY/
-const ALLOWED_BUNDLED_API_KEYS = new Set(["WXT_POSTHOG_API_KEY"])
-const useLocalPackages = isLocalPackagesEnabled(process.env)
-const shouldSkipEnvValidation = process.env.WXT_SKIP_ENV_VALIDATION === "true"
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
@@ -20,70 +10,33 @@ export default defineConfig({
   imports: false,
   modules: ["@wxt-dev/module-react", "@wxt-dev/i18n/module"],
   manifestVersion: 3,
-  // WXT top level alias - will be automatically synced to tsconfig.json paths and Vite alias
-  alias: useLocalPackages
-    ? {
-        "@read-frog/definitions": path.resolve(
-          __dirname,
-          "../read-frog-monorepo/packages/definitions/src",
-        ),
-        "@read-frog/api-contract": path.resolve(
-          __dirname,
-          "../read-frog-monorepo/packages/api-contract/src",
-        ),
-      }
-    : {},
-  manifest: ({ mode, browser }) => ({
+  manifest: ({ mode }) => ({
     name: "__MSG_extName__",
     description: "__MSG_extDescription__",
     default_locale: "en",
     // Fixed extension ID for development
-    ...(mode === "development" &&
-      (browser === "chrome" || browser === "edge") && {
-        key: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAw2KhiXO2vySZtPu5pNSbyKhYavh8Be7gXmCZt8aJf6tQ/L3JK0qzL+3JSc/o20td3Jw+B2Dcw+EI93NAZr24xKnTNXQiJpuIuHb8xLXD0Ra/HrTVi4TJIhPdESogoG4uL6CD/F3TxfZJ2trX4Bt9cdAw1RGGeU+xU0g+YFfEka4ZUCpFAmTEw9H3/DU+nCp8yGaJWyiVgCTcFe38GZKEPt0iMJkTw956wz/iiafLx0pNG/RaztG9cAPoQOD2+SMFaeQ+b/G4OG17TYhzb09AhNBl6zSJ3jTKHSwuedCFwCce8Q/EchJfQZv71mjAE97bzwvkDYPCLj31Z5FE8HntMwIDAQAB",
-      }),
+    ...(mode === "development" && {
+      key: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAw2KhiXO2vySZtPu5pNSbyKhYavh8Be7gXmCZt8aJf6tQ/L3JK0qzL+3JSc/o20td3Jw+B2Dcw+EI93NAZr24xKnTNXQiJpuIuHb8xLXD0Ra/HrTVi4TJIhPdESogoG4uL6CD/F3TxfZJ2trX4Bt9cdAw1RGGeU+xU0g+YFfEka4ZUCpFAmTEw9H3/DU+nCp8yGaJWyiVgCTcFe38GZKEPt0iMJkTw956wz/iiafLx0pNG/RaztG9cAPoQOD2+SMFaeQ+b/G4OG17TYhzb09AhNBl6zSJ3jTKHSwuedCFwCce8Q/EchJfQZv71mjAE97bzwvkDYPCLj31Z5FE8HntMwIDAQAB",
+    }),
     permissions: [
       "storage",
       "tabs",
       "alarms",
       "contextMenus",
-      "identity",
       "scripting",
       "webNavigation",
-      ...(browser !== "firefox" ? ["offscreen", "sidePanel"] : []),
     ],
     host_permissions: [
       "*://*/*", // Required for scripting.executeScript in any frame
     ],
-    // Allow images/SVGs referenced by content-script UI <img> tags to be loaded from
-    // moz-extension:// URLs on regular pages. Firefox enforces this more strictly.
     web_accessible_resources: [
       {
         resources: ["assets/*.png", "assets/*.svg", "assets/*.webp"],
         matches: ["*://*/*", "file:///*"],
       },
     ],
-    // Firefox-specific settings for MV3
-    ...(browser === "firefox" && {
-      // Override default CSP to exclude `upgrade-insecure-requests` (Firefox MV3 default),
-      // which would upgrade custom provider HTTP URLs (e.g. LAN) to HTTPS.
-      content_security_policy: {
-        extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';",
-      },
-      browser_specific_settings: {
-        gecko: {
-          id: "{bd311a81-4530-4fcc-9178-74006155461b}",
-          strict_min_version: "112.0",
-          data_collection_permissions: {
-            required: ["none"],
-            optional: ["technicalAndInteraction"],
-          },
-        },
-      },
-    }),
   }),
   zip: {
-    includeSources: [".env.production"],
     excludeSources: ["docs/**/*", "assets/**/*", "repos/**/*", "readmes/**/*"],
   },
   dev: {
@@ -94,7 +47,7 @@ export default defineConfig({
       strictPort: false,
     },
   },
-  vite: (configEnv) => ({
+  vite: () => ({
     resolve: {
       // CodeMirror breaks with "Unrecognized extension value in extension set"
       // if the bundle contains more than one copy of these packages (#1782).
@@ -124,33 +77,22 @@ export default defineConfig({
       //      reuses for autocomplete/type-checking at every `i18n.t('key')` call site.
       // Runtime UI string lookup itself no longer goes through @wxt-dev/i18n.
       ViteYaml(),
-      ...(configEnv.mode === "production"
-        ? [
-            {
-              name: "check-api-key-env",
-              buildStart() {
-                z.object(
-                  createExtensionClientEnvSchema(
-                    configEnv.mode === "production",
-                    shouldSkipEnvValidation,
-                  ),
-                ).parse(resolveExtensionEnv(process.env))
+      {
+        name: "check-api-key-env",
+        buildStart() {
+          const apiKeyVars = Object.keys(process.env).filter((key) =>
+            WXT_API_KEY_PATTERN.test(key),
+          )
 
-                const apiKeyVars = Object.keys(process.env)
-                  .filter((key) => WXT_API_KEY_PATTERN.test(key))
-                  .filter((key) => !ALLOWED_BUNDLED_API_KEYS.has(key))
-
-                if (apiKeyVars.length > 0) {
-                  throw new Error(
-                    `\n\nFound WXT_*_API_KEY environment variables that may be bundled:\n` +
-                      `${apiKeyVars.map((k) => `   - ${k}`).join("\n")}\n\n` +
-                      `Please unset these variables before building for production.\n`,
-                  )
-                }
-              },
-            },
-          ]
-        : []),
+          if (apiKeyVars.length > 0) {
+            throw new Error(
+              `\n\nFound WXT_*_API_KEY environment variables that may be bundled:\n` +
+                `${apiKeyVars.map((k) => `   - ${k}`).join("\n")}\n\n` +
+                `Please unset these variables before building for production.\n`,
+            )
+          }
+        },
+      },
     ],
   }),
 })

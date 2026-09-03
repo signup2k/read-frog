@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/base-ui/sidebar"
 import { i18n } from "@/utils/i18n"
 
-const OVERLAY_TOOLS_PATHS = ["/floating-button", "/selection-toolbar", "/context-menu"] as const
+const OVERLAY_TOOLS_PATHS = ["/floating-button"] as const
 
 export function SettingsNav() {
   const { pathname } = useLocation()
@@ -43,18 +43,6 @@ export function SettingsNav() {
             >
               <Icon icon="tabler:api" />
               <span>{i18n.t("options.apiProviders.title")}</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              render={<Link to="/custom-actions" />}
-              isActive={pathname === "/custom-actions"}
-            >
-              <Icon icon="tabler:sparkles" />
-              <span>
-                {i18n.t("options.floatingButtonAndToolbar.selectionToolbar.customActions.title")}
-              </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
 
@@ -108,43 +96,10 @@ export function SettingsNav() {
                       <span>{i18n.t("options.overlayTools.floatingButton.title")}</span>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton
-                      render={<Link to="/selection-toolbar" />}
-                      isActive={pathname === "/selection-toolbar"}
-                    >
-                      <span>{i18n.t("options.overlayTools.selectionToolbar.title")}</span>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton
-                      render={<Link to="/context-menu" />}
-                      isActive={pathname === "/context-menu"}
-                    >
-                      <span>{i18n.t("options.overlayTools.contextMenu.title")}</span>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
                 </SidebarMenuSub>
               </CollapsibleContent>
             </SidebarMenuItem>
           </Collapsible>
-
-          <SidebarMenuItem>
-            <SidebarMenuButton render={<Link to="/tts" />} isActive={pathname === "/tts"}>
-              <Icon icon="tabler:speakerphone" />
-              <span>{i18n.t("options.tts.title")}</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              render={<Link to="/statistics" />}
-              isActive={pathname === "/statistics"}
-            >
-              <Icon icon="tabler:chart-dots" />
-              <span>{i18n.t("options.statistics.title")}</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
 
           <SidebarMenuItem>
             <SidebarMenuButton render={<Link to="/config" />} isActive={pathname === "/config"}>

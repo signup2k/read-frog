@@ -1,9 +1,6 @@
-import type { FeatureUsageContext } from "@/types/analytics"
 import type { Config } from "@/types/config/config"
 import debounce from "debounce"
-import { ANALYTICS_FEATURE, ANALYTICS_SURFACE } from "@/types/analytics"
 import { isLLMProviderConfig } from "@/types/config/provider"
-import { createFeatureUsageContext, trackFeatureUsed } from "@/utils/analytics"
 import { getLocalConfig } from "@/utils/config/storage"
 import {
   CONTENT_WRAPPER_CLASS,
@@ -77,7 +74,7 @@ interface IPageTranslationManager {
    * Starts the automatic page translation functionality
    * Registers observers, touch triggers and set storage
    */
-  start: (analyticsContext?: FeatureUsageContext) => Promise<void>
+  start: () => Promise<void>
 
   /**
    * Stops the automatic page translation functionality
@@ -151,23 +148,15 @@ export class PageTranslationManager implements IPageTranslationManager {
     return this.isPageTranslating
   }
 
-  async start(analyticsContext?: FeatureUsageContext): Promise<void> {
+  async start(): Promise<void> {
     if (this.isPageTranslating) {
       console.warn("PageTranslationManager is already active")
       return
     }
 
-    const trackedContext = window === window.top ? analyticsContext : undefined
-
     const globalConfig = await getLocalConfig()
     if (!globalConfig) {
       console.warn("Config is not initialized")
-      if (trackedContext) {
-        void trackFeatureUsed({
-          ...trackedContext,
-          outcome: "failure",
-        })
-      }
       return
     }
     const config = getEffectivePageTranslationConfig(globalConfig, window.location.href)
@@ -179,142 +168,120 @@ export class PageTranslationManager implements IPageTranslationManager {
         language: config.language,
       })
     ) {
-      if (trackedContext) {
-        void trackFeatureUsed({
-          ...trackedContext,
-          outcome: "failure",
-        })
-      }
       return
     }
 
-    try {
-      const providerConfig = resolveProviderConfig(config, "translate")
+    const providerConfig = resolveProviderConfig(config, "translate")
 
-      await sendMessage("setAndNotifyPageTranslationStateChangedByManager", {
-        enabled: true,
-        url: window.location.href,
-      })
+    await sendMessage("setAndNotifyPageTranslationStateChangedByManager", {
+      enabled: true,
+      url: window.location.href,
+    })
 
-      this.isPageTranslating = true
-      this.translationSessionVersion += 1
-      beginPageTranslationSession()
+    this.isPageTranslating = true
+    this.translationSessionVersion += 1
+    beginPageTranslationSession()
 
-      const siteRule = getEffectiveSiteRule(config, window.location.href)
-      if (siteRule.injectedCss) {
-        void ensureSiteRuleCSS(document, siteRule.injectedCss)
-      }
-
-      await this.primeDocumentTitleContext(
-        config.translate.enableAIContentAware && isLLMProviderConfig(providerConfig),
-      )
-      this.startDocumentTitleTracking()
-
-      // Listen to existing elements when they enter the viewport
-      const walkId = getRandomUUID()
-      this.walkId = walkId
-      this.intersectionObserver = new IntersectionObserver((entries, observer) => {
-        const targets: HTMLElement[] = []
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue
-          observer.unobserve(entry.target)
-          if (isHTMLElement(entry.target) && !entry.target.closest(`.${CONTENT_WRAPPER_CLASS}`)) {
-            targets.push(entry.target)
-          }
-        }
-        if (targets.length === 0) return
-        void (async () => {
-          // One config read per callback batch — a dense first intersection
-          // can deliver hundreds of entries at once (#1881).
-          const latestGlobalConfig = await getLocalConfig()
-          if (!latestGlobalConfig) {
-            logger.error("Global config is not initialized")
-            return
-          }
-          const currentConfig = getEffectivePageTranslationConfig(
-            latestGlobalConfig,
-            window.location.href,
-          )
-          if (this.walkId !== walkId) return
-          // One shared pacer bounds the batch's synchronous expansion work;
-          // the liveness check stops paced expansion promptly if the user
-          // cancels mid-flight (#1881).
-          const pacer = createWorkPacer()
-          const isWalkCurrent = () => this.walkId === walkId
-          if (currentConfig.translate.mode !== "translationOnly") {
-            for (const target of targets) {
-              void translateWalkedElement(
-                target,
-                walkId,
-                currentConfig,
-                false,
-                pacer,
-                isWalkCurrent,
-              )
-            }
-            return
-          }
-
-          // Translation-only keeps the readable source intact while providers
-          // work. Final swaps from one IntersectionObserver delivery are then
-          // staged and written in a single animation frame, so paragraphs do
-          // not visibly flip languages one request at a time.
-          const commitGroup = createDOMCommitGroup()
-          await Promise.allSettled(
-            targets.map((target) =>
-              translateWalkedElement(
-                target,
-                walkId,
-                currentConfig,
-                false,
-                pacer,
-                isWalkCurrent,
-                commitGroup,
-              ),
-            ),
-          )
-          if (isWalkCurrent()) {
-            commitGroup.commit()
-          } else {
-            commitGroup.discard()
-          }
-        })()
-      }, this.intersectionOptions)
-
-      // Observe mutations BEFORE the chunked walk: page JS runs between walk
-      // slices, and records emitted meanwhile must not be lost. The walk only
-      // writes data-read-frog-* attributes, which this observer's
-      // attributeFilter never reports, so this creates no feedback loop.
-      this.observeMutations(document.body)
-
-      // Label existing elements in time-sliced chunks (walkability caching is
-      // handled by the walk's onBlockedElement callback).
-      const initialWalk = this.observeTopLevelParagraphs(document.body, config, { chunked: true })
-      this.initialWalkDone = initialWalk
-      try {
-        await initialWalk
-      } finally {
-        // restart() may already have installed a newer walk's promise.
-        if (this.initialWalkDone === initialWalk) {
-          this.initialWalkDone = null
-        }
-      }
-
-      if (trackedContext) {
-        void trackFeatureUsed({
-          ...trackedContext,
-          outcome: "success",
-        })
-      }
-    } catch (error) {
-      if (trackedContext) {
-        void trackFeatureUsed({
-          ...trackedContext,
-          outcome: "failure",
-        })
-      }
-      throw error
+    const siteRule = getEffectiveSiteRule(config, window.location.href)
+    if (siteRule.injectedCss) {
+      void ensureSiteRuleCSS(document, siteRule.injectedCss)
     }
+
+    await this.primeDocumentTitleContext(
+      config.translate.enableAIContentAware && isLLMProviderConfig(providerConfig),
+    )
+    this.startDocumentTitleTracking()
+
+    // Listen to existing elements when they enter the viewport
+    const walkId = getRandomUUID()
+    this.walkId = walkId
+    this.intersectionObserver = new IntersectionObserver((entries, observer) => {
+      const targets: HTMLElement[] = []
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue
+        observer.unobserve(entry.target)
+        if (isHTMLElement(entry.target) && !entry.target.closest(`.${CONTENT_WRAPPER_CLASS}`)) {
+          targets.push(entry.target)
+        }
+      }
+      if (targets.length === 0) return
+      void (async () => {
+        // One config read per callback batch — a dense first intersection
+        // can deliver hundreds of entries at once (#1881).
+        const latestGlobalConfig = await getLocalConfig()
+        if (!latestGlobalConfig) {
+          logger.error("Global config is not initialized")
+          return
+        }
+        const currentConfig = getEffectivePageTranslationConfig(
+          latestGlobalConfig,
+          window.location.href,
+        )
+        if (this.walkId !== walkId) return
+        // One shared pacer bounds the batch's synchronous expansion work;
+        // the liveness check stops paced expansion promptly if the user
+        // cancels mid-flight (#1881).
+        const pacer = createWorkPacer()
+        const isWalkCurrent = () => this.walkId === walkId
+        if (currentConfig.translate.mode !== "translationOnly") {
+          for (const target of targets) {
+            void translateWalkedElement(
+              target,
+              walkId,
+              currentConfig,
+              false,
+              pacer,
+              isWalkCurrent,
+            )
+          }
+          return
+        }
+
+        // Translation-only keeps the readable source intact while providers
+        // work. Final swaps from one IntersectionObserver delivery are then
+        // staged and written in a single animation frame, so paragraphs do
+        // not visibly flip languages one request at a time.
+        const commitGroup = createDOMCommitGroup()
+        await Promise.allSettled(
+          targets.map((target) =>
+            translateWalkedElement(
+              target,
+              walkId,
+              currentConfig,
+              false,
+              pacer,
+              isWalkCurrent,
+              commitGroup,
+            ),
+          ),
+        )
+        if (isWalkCurrent()) {
+          commitGroup.commit()
+        } else {
+          commitGroup.discard()
+        }
+      })()
+    }, this.intersectionOptions)
+
+    // Observe mutations BEFORE the chunked walk: page JS runs between walk
+    // slices, and records emitted meanwhile must not be lost. The walk only
+    // writes data-read-frog-* attributes, which this observer's
+    // attributeFilter never reports, so this creates no feedback loop.
+    this.observeMutations(document.body)
+
+    // Label existing elements in time-sliced chunks (walkability caching is
+    // handled by the walk's onBlockedElement callback).
+    const initialWalk = this.observeTopLevelParagraphs(document.body, config, { chunked: true })
+    this.initialWalkDone = initialWalk
+    try {
+      await initialWalk
+    } finally {
+      // restart() may already have installed a newer walk's promise.
+      if (this.initialWalkDone === initialWalk) {
+        this.initialWalkDone = null
+      }
+    }
+
   }
 
   stop(): void {
@@ -414,12 +381,7 @@ export class PageTranslationManager implements IPageTranslationManager {
         if (this.isPageTranslating) {
           this.stop()
         } else {
-          void this.start(
-            createFeatureUsageContext(
-              ANALYTICS_FEATURE.PAGE_TRANSLATION,
-              ANALYTICS_SURFACE.TOUCH_GESTURE,
-            ),
-          )
+          void this.start()
         }
       }
       reset()
@@ -981,6 +943,9 @@ export class PageTranslationManager implements IPageTranslationManager {
   private scheduleRetranslateRetry(source: HTMLElement, sessionVersion: number): void {
     let retry = this.retranslateRetries.get(source)
     if (!retry) {
+      // SAFETY: debounce()'s return type omits `clear`, but the installed
+      // debounce version always attaches a clear() method to its debounced
+      // wrapper, satisfying DebouncedRetry's `clear: () => void` member.
       const debounced = debounce(() => {
         this.pendingRetranslateRetries.delete(debounced)
         void this.runScheduledRetranslate(source, sessionVersion)

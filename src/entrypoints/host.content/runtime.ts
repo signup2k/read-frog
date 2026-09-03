@@ -82,10 +82,10 @@ export async function bootstrapHostContent(
 
   // Listen for translation state changes from background
   const cleanupTranslationStateListener = onMessage("askManagerToTogglePageTranslation", (msg) => {
-    const { enabled, analyticsContext } = msg.data
+    const { enabled } = msg.data
     if (enabled === manager.isActive) return
     if (enabled) {
-      void manager.start(window === window.top ? analyticsContext : undefined)
+      void manager.start()
     } else {
       manager.stop()
     }

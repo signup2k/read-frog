@@ -16,29 +16,12 @@ type SearchItemDefinition = Omit<SearchItem, "titleKey" | "descriptionKey" | "pa
   pageKey: I18nKey
 }
 
-const TTS_SEARCH_ITEMS: SearchItemDefinition[] = [
-  {
-    sectionId: "tts-config",
-    route: "/tts",
-    titleKey: "options.tts.title",
-    descriptionKey: "options.tts.description",
-    pageKey: "options.tts.title",
-  },
-]
-
 const CONFIG_SEARCH_ITEMS = [
   {
     sectionId: "beta-experience",
     route: "/config",
     titleKey: "options.betaExperience.title",
     descriptionKey: "options.betaExperience.description",
-    pageKey: "options.config.title",
-  },
-  {
-    sectionId: "google-drive-sync",
-    route: "/config",
-    titleKey: "options.config.sync.googleDrive.title",
-    descriptionKey: "options.config.sync.googleDrive.description",
     pageKey: "options.config.title",
   },
   {
@@ -109,15 +92,6 @@ export const SEARCH_ITEMS: SearchItem[] = [
     titleKey: "options.apiProviders.title",
     descriptionKey: "options.apiProviders.description",
     pageKey: "options.apiProviders.title",
-  },
-
-  // Custom Actions page
-  {
-    sectionId: "custom-actions",
-    route: "/custom-actions",
-    titleKey: "options.floatingButtonAndToolbar.selectionToolbar.customActions.title",
-    descriptionKey: "options.floatingButtonAndToolbar.selectionToolbar.customActions.description",
-    pageKey: "options.floatingButtonAndToolbar.selectionToolbar.customActions.title",
   },
 
   // Translation page
@@ -272,45 +246,6 @@ export const SEARCH_ITEMS: SearchItem[] = [
     pageKey: "options.overlayTools.floatingButton.title",
   },
 
-  // Selection Toolbar page
-  {
-    sectionId: "selection-toolbar-toggle",
-    route: "/selection-toolbar",
-    titleKey: "options.floatingButtonAndToolbar.selectionToolbar.globalToggle.title",
-    descriptionKey: "options.floatingButtonAndToolbar.selectionToolbar.globalToggle.description",
-    pageKey: "options.overlayTools.selectionToolbar.title",
-  },
-  {
-    sectionId: "selection-toolbar-opacity",
-    route: "/selection-toolbar",
-    titleKey: "options.floatingButtonAndToolbar.selectionToolbar.opacity.title",
-    descriptionKey: "options.floatingButtonAndToolbar.selectionToolbar.opacity.description",
-    pageKey: "options.overlayTools.selectionToolbar.title",
-  },
-  {
-    sectionId: "selection-translation-shortcut",
-    route: "/selection-toolbar",
-    titleKey: "options.floatingButtonAndToolbar.selectionToolbar.shortcut.title",
-    descriptionKey: "options.floatingButtonAndToolbar.selectionToolbar.shortcut.description",
-    pageKey: "options.overlayTools.selectionToolbar.title",
-  },
-  {
-    sectionId: "selection-toolbar-disabled-sites",
-    route: "/selection-toolbar",
-    titleKey: "options.floatingButtonAndToolbar.selectionToolbar.disabledSites.title",
-    descriptionKey: "options.floatingButtonAndToolbar.selectionToolbar.disabledSites.description",
-    pageKey: "options.overlayTools.selectionToolbar.title",
-  },
-
-  // Context Menu page
-  {
-    sectionId: "context-menu-translate",
-    route: "/context-menu",
-    titleKey: "options.floatingButtonAndToolbar.contextMenu.translate.title",
-    descriptionKey: "options.floatingButtonAndToolbar.contextMenu.translate.description",
-    pageKey: "options.overlayTools.contextMenu.title",
-  },
-
   // Video Subtitles page
   {
     sectionId: "subtitles-config",
@@ -353,9 +288,6 @@ export const SEARCH_ITEMS: SearchItem[] = [
     descriptionKey: "options.videoSubtitles.aiSegmentation.clearCacheDialog.description",
     pageKey: "options.videoSubtitles.title",
   },
-
-  // Text to Speech page
-  ...TTS_SEARCH_ITEMS,
 
   // Config page
   ...CONFIG_SEARCH_ITEMS,
