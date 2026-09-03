@@ -1,5 +1,5 @@
 import type { APICallError } from "ai"
-import { IconAlertCircle } from "@tabler/icons-react"
+import { Icon } from "@iconify/react"
 import { use } from "react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/base-ui/alert"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/base-ui/hover-card"
@@ -14,11 +14,14 @@ export function ErrorButton({ error }: { error: APICallError }) {
         delay={0}
         closeDelay={0}
         render={
-          <IconAlertCircle className="size-4 cursor-pointer text-destructive hover:text-destructive/90" />
+          <Icon
+            icon="tabler:alert-circle"
+            className="size-4 cursor-pointer text-destructive hover:text-destructive/90"
+          />
         }
       />
       <HoverCardContent container={shadowWrapper} className="notranslate w-64" render={<Alert />}>
-        <IconAlertCircle className="size-4 text-red-500!" />
+        <Icon icon="tabler:alert-circle" className="size-4 text-red-500!" />
         <AlertTitle>Translation Error</AlertTitle>
         <AlertDescription className="break-all">
           <StatusCode statusCode={error.statusCode ?? 500} />

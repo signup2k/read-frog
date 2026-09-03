@@ -1,4 +1,4 @@
-import { IconAlertCircle } from "@tabler/icons-react"
+import { Icon } from "@iconify/react"
 import { useAtomValue, useSetAtom } from "jotai"
 import { useState } from "react"
 import {
@@ -58,7 +58,7 @@ export function RecoveryFallback({ error, onRecovered }: RecoveryFallbackProps) 
 
         {error?.message && (
           <Alert variant="destructive">
-            <IconAlertCircle />
+            <Icon icon="tabler:alert-circle" />
             <AlertTitle>{i18n.t("errorRecovery.errorDetails")}</AlertTitle>
             <AlertDescription>{error.message}</AlertDescription>
           </Alert>

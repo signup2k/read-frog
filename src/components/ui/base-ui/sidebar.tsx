@@ -1,7 +1,7 @@
 import type { VariantProps } from "class-variance-authority"
 import { mergeProps } from "@base-ui/react/merge-props"
 import { useRender } from "@base-ui/react/use-render"
-import { IconLayoutSidebarLeftExpand, IconLayoutSidebarRightExpand } from "@tabler/icons-react"
+import { Icon } from "@iconify/react"
 import { cva } from "class-variance-authority"
 import * as React from "react"
 import { Button } from "@/components/ui/base-ui/button"
@@ -261,7 +261,11 @@ function SidebarTrigger({ className, onClick, ...props }: React.ComponentProps<t
       }}
       {...props}
     >
-      {open ? <IconLayoutSidebarRightExpand /> : <IconLayoutSidebarLeftExpand />}
+      {open ? (
+        <Icon icon="tabler:layout-sidebar-right-expand" />
+      ) : (
+        <Icon icon="tabler:layout-sidebar-left-expand" />
+      )}
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   )

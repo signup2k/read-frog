@@ -1,4 +1,4 @@
-import { IconDownload, IconLanguage, IconLoader2 } from "@tabler/icons-react"
+import { Icon } from "@iconify/react"
 import { cva } from "class-variance-authority"
 import { Button } from "@/components/ui/base-ui/button"
 import { i18n } from "@/utils/i18n"
@@ -28,7 +28,7 @@ export function DownloadTranslatedSubtitles() {
 
   return (
     <SubtitlesSettingsItem
-      icon={<IconLanguage className="size-4" />}
+      icon={<Icon icon="tabler:language" className="size-4" />}
       label={
         <div className="flex min-w-0 flex-col">
           <span className="truncate">{title}</span>
@@ -60,9 +60,9 @@ export function DownloadTranslatedSubtitles() {
         disabled={isRunning}
       >
         {isRunning ? (
-          <IconLoader2 className="size-3.5 animate-spin" />
+          <Icon icon="tabler:loader2" className="size-3.5 animate-spin" />
         ) : (
-          <IconDownload className="size-3.5" />
+          <Icon icon="tabler:download" className="size-3.5" />
         )}
       </Button>
     </SubtitlesSettingsItem>

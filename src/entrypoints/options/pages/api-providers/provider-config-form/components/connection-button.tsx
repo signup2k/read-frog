@@ -1,5 +1,5 @@
 import type { APIProviderConfig } from "@/types/config/provider"
-import { IconCheck, IconHourglassLow, IconX } from "@tabler/icons-react"
+import { Icon } from "@iconify/react"
 import { useMutation } from "@tanstack/react-query"
 import { useCallback, useEffect, useRef, useState } from "react"
 import LoadingDots from "@/components/loading-dots"
@@ -31,19 +31,19 @@ interface ConnectionTestVariables {
 
 const connectionTestFeedbackIconConfig = {
   success: {
-    Icon: IconCheck,
+    Icon: "tabler:check",
     containerClassName:
       "flex size-4 items-center justify-center rounded-full bg-green-200 dark:bg-green-800/50",
     iconClassName: "size-3 text-green-700 dark:text-green-300 stroke-[2.5]",
   },
   failed: {
-    Icon: IconX,
+    Icon: "tabler:x",
     containerClassName:
       "flex size-4 items-center justify-center rounded-full bg-red-200 dark:bg-red-800/50",
     iconClassName: "size-3 text-red-700 dark:text-red-300 stroke-[2.5]",
   },
   slow: {
-    Icon: IconHourglassLow,
+    Icon: "tabler:hourglass-low",
     containerClassName:
       "flex size-4 items-center justify-center rounded-full bg-yellow-200 dark:bg-yellow-800/50",
     iconClassName: "size-3 text-yellow-700 dark:text-yellow-300 stroke-[2.5]",
@@ -51,7 +51,7 @@ const connectionTestFeedbackIconConfig = {
 } satisfies Record<
   ConnectionTestFeedback,
   {
-    Icon: typeof IconCheck
+    Icon: string
     containerClassName: string
     iconClassName: string
   }
@@ -69,14 +69,14 @@ function getConnectionTestFeedback(startedAt: number): ConnectionTestFeedback {
 
 function ConnectionFeedbackIcon({ feedback }: { feedback: ConnectionTestFeedback }) {
   const {
-    Icon: FeedbackIcon,
+    Icon: iconSlug,
     containerClassName,
     iconClassName,
   } = connectionTestFeedbackIconConfig[feedback]
 
   return (
     <div aria-hidden="true" className={containerClassName}>
-      <FeedbackIcon className={iconClassName} strokeWidth={2.5} />
+      <Icon icon={iconSlug} className={iconClassName} />
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { IconSubtitles } from "@tabler/icons-react"
+import { Icon } from "@iconify/react"
 import { useAtomValue } from "jotai"
 import { Switch } from "@/components/ui/base-ui/switch"
 import { APP_NAME } from "@/utils/constants/app"
@@ -16,7 +16,7 @@ export function SubtitlesToggle() {
 
   return (
     <SubtitlesSettingsItem
-      icon={<IconSubtitles className="size-4" />}
+      icon={<Icon icon="tabler:subtitles" className="size-4" />}
       label={title}
       labelFor={switchId}
     >

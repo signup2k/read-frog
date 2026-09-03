@@ -1,5 +1,5 @@
 import { Select as SelectPrimitive } from "@base-ui/react/select"
-import { IconCheck, IconChevronDown, IconChevronUp } from "@tabler/icons-react"
+import { Icon } from "@iconify/react"
 import * as React from "react"
 import { SHARED_POPUP_CLOSED_STATE_CLASS } from "@/components/ui/base-ui/popup-animation-classes"
 import { cn } from "@/utils/styles/utils"
@@ -47,7 +47,7 @@ function SelectTrigger({
       {children}
       <SelectPrimitive.Icon
         data-slot="select-icon"
-        render={<IconChevronDown className="pointer-events-none size-4" />}
+        render={<Icon icon="tabler:chevron-down" className="pointer-events-none size-4" />}
       />
     </SelectPrimitive.Trigger>
   )
@@ -129,7 +129,7 @@ function SelectItem({ className, children, ...props }: SelectPrimitive.Item.Prop
             {...indicatorProps}
             className="pointer-events-none absolute right-2 flex size-4 items-center justify-center"
           >
-            <IconCheck className="pointer-events-none" />
+            <Icon icon="tabler:check" className="pointer-events-none" />
           </span>
         )}
       />
@@ -160,7 +160,7 @@ function SelectScrollUpButton({
       )}
       {...props}
     >
-      <IconChevronUp />
+      <Icon icon="tabler:chevron-up" />
     </SelectPrimitive.ScrollUpArrow>
   )
 }
@@ -178,7 +178,7 @@ function SelectScrollDownButton({
       )}
       {...props}
     >
-      <IconChevronDown />
+      <Icon icon="tabler:chevron-down" />
     </SelectPrimitive.ScrollDownArrow>
   )
 }

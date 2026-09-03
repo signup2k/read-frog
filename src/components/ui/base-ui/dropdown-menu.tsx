@@ -1,7 +1,7 @@
 "use client"
 
 import { Menu as MenuPrimitive } from "@base-ui/react/menu"
-import { IconCheck, IconChevronRight } from "@tabler/icons-react"
+import { Icon } from "@iconify/react"
 import * as React from "react"
 import { SHARED_POPUP_CLOSED_STATE_CLASS } from "@/components/ui/base-ui/popup-animation-classes"
 import { cn } from "@/utils/styles/utils"
@@ -117,7 +117,7 @@ function DropdownMenuSubTrigger({
       {...props}
     >
       {children}
-      <IconChevronRight className="cn-rtl-flip ml-auto" />
+      <Icon icon="tabler:chevron-right" className="cn-rtl-flip ml-auto" />
     </MenuPrimitive.SubmenuTrigger>
   )
 }
@@ -171,7 +171,7 @@ function DropdownMenuCheckboxItem({
         data-slot="dropdown-menu-checkbox-item-indicator"
       >
         <MenuPrimitive.CheckboxItemIndicator>
-          <IconCheck />
+          <Icon icon="tabler:check" />
         </MenuPrimitive.CheckboxItemIndicator>
       </span>
       {children}
@@ -204,7 +204,7 @@ function DropdownMenuRadioItem({
         data-slot="dropdown-menu-radio-item-indicator"
       >
         <MenuPrimitive.RadioItemIndicator>
-          <IconCheck />
+          <Icon icon="tabler:check" />
         </MenuPrimitive.RadioItemIndicator>
       </span>
       {children}

@@ -1,5 +1,5 @@
 import { Checkbox as CheckboxPrimitive } from "@base-ui/react/checkbox"
-import { IconCheck } from "@tabler/icons-react"
+import { Icon } from "@iconify/react"
 import * as React from "react"
 import { cn } from "@/utils/styles/utils"
 
@@ -33,7 +33,7 @@ function Checkbox({ className, onCheckedChange, ...props }: CheckboxProps) {
         data-slot="checkbox-indicator"
         className="grid place-content-center text-current transition-none [&>svg]:size-3.5"
       >
-        <IconCheck />
+        <Icon icon="tabler:check" />
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
   )

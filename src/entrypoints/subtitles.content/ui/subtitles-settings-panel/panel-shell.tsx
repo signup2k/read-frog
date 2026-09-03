@@ -1,4 +1,4 @@
-import { IconChevronLeft } from "@tabler/icons-react"
+import { Icon } from "@iconify/react"
 import { Activity, useMemo, useRef } from "react"
 import { Button } from "@/components/ui/base-ui/button"
 import { cn } from "@/utils/styles/utils"
@@ -69,7 +69,7 @@ function PanelContent({
             onClick={header?.onBack}
             className="rounded-full"
           >
-            <IconChevronLeft className="size-4" />
+            <Icon icon="tabler:chevron-left" className="size-4" />
           </Button>
 
           <div className="min-w-0 truncate text-xs font-medium">{header?.title}</div>

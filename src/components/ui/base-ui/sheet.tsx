@@ -1,7 +1,7 @@
 "use client"
 
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog"
-import { IconX } from "@tabler/icons-react"
+import { Icon } from "@iconify/react"
 import * as React from "react"
 import { Button } from "@/components/ui/base-ui/button"
 import { SHARED_POPUP_CLOSED_STATE_CLASS } from "@/components/ui/base-ui/popup-animation-classes"
@@ -68,7 +68,7 @@ function SheetContent({
             data-slot="sheet-close"
             render={<Button variant="ghost" className="absolute top-4 right-4" size="icon-sm" />}
           >
-            <IconX />
+            <Icon icon="tabler:x" />
             <span className="sr-only">Close</span>
           </SheetPrimitive.Close>
         )}

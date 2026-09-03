@@ -1,4 +1,4 @@
-import { IconDownload, IconLoader2 } from "@tabler/icons-react"
+import { Icon } from "@iconify/react"
 import { useState } from "react"
 import { Button } from "@/components/ui/base-ui/button"
 import { toastManager } from "@/components/ui/base-ui/toast"
@@ -33,7 +33,7 @@ export function DownloadSourceSubtitles() {
 
   return (
     <SubtitlesSettingsItem
-      icon={<IconDownload className="size-4" />}
+      icon={<Icon icon="tabler:download" className="size-4" />}
       label={title}
       labelFor={buttonId}
     >
@@ -46,9 +46,9 @@ export function DownloadSourceSubtitles() {
         disabled={isDownloading}
       >
         {isDownloading ? (
-          <IconLoader2 className="size-3.5 animate-spin" />
+          <Icon icon="tabler:loader2" className="size-3.5 animate-spin" />
         ) : (
-          <IconDownload className="size-3.5" />
+          <Icon icon="tabler:download" className="size-3.5" />
         )}
       </Button>
     </SubtitlesSettingsItem>

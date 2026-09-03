@@ -3,7 +3,6 @@ import type { LanguageItem } from "@/components/language-combobox-options"
 import { Combobox as ComboboxPrimitive } from "@base-ui/react"
 import { Icon } from "@iconify/react"
 import { langCodeISO6393Schema } from "@read-frog/definitions"
-import { IconChevronDown } from "@tabler/icons-react"
 import { useAtom, useAtomValue } from "jotai"
 import { useMemo } from "react"
 import { filterLanguage } from "@/components/language-combobox-options"
@@ -59,7 +58,7 @@ function LanguageComboboxTrigger({
         <span className="w-full truncate text-left">{label}</span>
         <span className="text-sm text-neutral-500">{subtitle}</span>
       </div>
-      <IconChevronDown className="size-4 text-muted-foreground" />
+      <Icon icon="tabler:chevron-down" className="size-4 text-muted-foreground" />
     </ComboboxPrimitive.Trigger>
   )
 }

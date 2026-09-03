@@ -1,22 +1,15 @@
 import type { ComponentProps, ReactElement } from "react"
 import { Toast } from "@base-ui/react/toast"
-import {
-  CircleAlertIcon,
-  CircleCheckIcon,
-  InfoIcon,
-  LoaderCircleIcon,
-  type LucideIcon,
-  TriangleAlertIcon,
-} from "lucide-react"
+import { Icon } from "@iconify/react"
 import { buttonVariants } from "@/components/ui/base-ui/button"
 import { cn } from "@/utils/styles/utils"
 
 const TOAST_ICONS = {
-  error: CircleAlertIcon,
-  info: InfoIcon,
-  loading: LoaderCircleIcon,
-  success: CircleCheckIcon,
-  warning: TriangleAlertIcon,
+  error: "tabler:alert-circle",
+  info: "tabler:info-circle",
+  loading: "tabler:loader-2",
+  success: "tabler:circle-check",
+  warning: "tabler:triangle-alert",
 } as const
 
 type SwipeDirection = "up" | "down" | "left" | "right"
@@ -67,11 +60,11 @@ function getUpsertReplayClassName(toast: {
 }
 
 function FullToastContent({
-  Icon,
+  iconSlug,
   toast,
   stacked = false,
 }: {
-  Icon: LucideIcon | null
+  iconSlug: string | null
   toast: Toast.Root.ToastObject
   stacked?: boolean
 }): ReactElement {
@@ -85,12 +78,15 @@ function FullToastContent({
       data-slot="toast-content"
     >
       <div className="flex min-w-0 flex-1 gap-2">
-        {Icon ? (
+        {iconSlug ? (
           <div
             className="shrink-0 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&>svg]:h-lh [&>svg]:w-4"
             data-slot="toast-icon"
           >
-            <Icon className="in-data-[type=error]:text-destructive in-data-[type=info]:text-toast-info in-data-[type=loading]:animate-spin in-data-[type=loading]:opacity-80 in-data-[type=success]:text-toast-success in-data-[type=warning]:text-toast-warning" />
+            <Icon
+              icon={iconSlug}
+              className="in-data-[type=error]:text-destructive in-data-[type=info]:text-toast-info in-data-[type=loading]:animate-spin in-data-[type=loading]:opacity-80 in-data-[type=success]:text-toast-success in-data-[type=warning]:text-toast-warning"
+            />
           </div>
         ) : null}
 
@@ -144,7 +140,7 @@ function Toasts({
         )}
       >
         {toasts.map((toast) => {
-          const Icon = toast.type ? TOAST_ICONS[toast.type as keyof typeof TOAST_ICONS] : null
+          const iconSlug = toast.type ? TOAST_ICONS[toast.type as keyof typeof TOAST_ICONS] : null
           const toastData = toast.data as ToastData | undefined
 
           return (
@@ -187,7 +183,7 @@ function Toasts({
               swipeDirection={swipeDirection}
               toast={toast}
             >
-              <FullToastContent Icon={Icon} stacked toast={toast} />
+              <FullToastContent iconSlug={iconSlug} stacked toast={toast} />
             </Toast.Root>
           )
         })}
@@ -210,7 +206,7 @@ function AnchoredToasts({
         data-slot="toast-viewport-anchored"
       >
         {toasts.map((toast) => {
-          const Icon = toast.type ? TOAST_ICONS[toast.type as keyof typeof TOAST_ICONS] : null
+          const iconSlug = toast.type ? TOAST_ICONS[toast.type as keyof typeof TOAST_ICONS] : null
           const toastData = toast.data as ToastData | undefined
           const tooltipStyle = toastData?.tooltipStyle ?? false
           const anchor = toast.positionerProps?.anchor
@@ -245,7 +241,7 @@ function AnchoredToasts({
                     <Toast.Title data-slot="toast-title" />
                   </Toast.Content>
                 ) : (
-                  <FullToastContent Icon={Icon} toast={toast} />
+                  <FullToastContent iconSlug={iconSlug} toast={toast} />
                 )}
               </Toast.Root>
             </Toast.Positioner>

@@ -1,4 +1,4 @@
-import { IconRefresh } from "@tabler/icons-react"
+import { Icon } from "@iconify/react"
 import { useSetAtom } from "jotai"
 import { useState } from "react"
 import {
@@ -35,7 +35,7 @@ export function ResetConfig() {
       <AlertDialog open={open} onOpenChange={setOpen}>
         <div className="flex w-full justify-end">
           <AlertDialogTrigger render={<Button variant="destructive" />}>
-            <IconRefresh className="size-4" />
+            <Icon icon="tabler:refresh" className="size-4" />
             {i18n.t("options.config.resetConfig.dialog.trigger")}
           </AlertDialogTrigger>
         </div>

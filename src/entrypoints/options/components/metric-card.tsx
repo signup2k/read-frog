@@ -1,9 +1,4 @@
 import { Icon } from "@iconify/react"
-import {
-  IconCircleArrowDownRightFilled,
-  IconCircleArrowUpRightFilled,
-  IconMinus,
-} from "@tabler/icons-react"
 import { Activity } from "react"
 import { Card, CardContent } from "@/components/ui/base-ui/card"
 import { addThousandsSeparator, numberToPercentage } from "@/utils/utils"
@@ -48,18 +43,18 @@ function Comparison({ comparison }: { comparison?: number }) {
     <>
       <Activity mode={comparison > 0 ? "visible" : "hidden"}>
         <div className="text-primary-strong flex h-full items-center gap-1 text-base">
-          <IconCircleArrowUpRightFilled className="size-5" />
+          <Icon icon="tabler:circle-arrow-up-right-filled" className="size-5" />
           {comparisonText}
         </div>
       </Activity>
       <Activity mode={comparison === 0 ? "visible" : "hidden"}>
         <div className="flex h-full items-center gap-1 text-base text-foreground">
-          <IconMinus className="size-5" />
+          <Icon icon="tabler:minus" className="size-5" />
         </div>
       </Activity>
       <Activity mode={comparison < 0 ? "visible" : "hidden"}>
         <div className="flex h-full items-center gap-1 text-base text-destructive">
-          <IconCircleArrowDownRightFilled className="size-5" />
+          <Icon icon="tabler:circle-arrow-down-right-filled" className="size-5" />
           {comparisonText}
         </div>
       </Activity>

@@ -1,4 +1,4 @@
-import { IconTrash } from "@tabler/icons-react"
+import { Icon } from "@iconify/react"
 import { useState } from "react"
 import {
   AlertDialog,
@@ -41,7 +41,7 @@ export function ClearAiSegmentationCache() {
       <AlertDialog open={open} onOpenChange={setOpen}>
         <div className="flex w-full justify-end">
           <AlertDialogTrigger render={<Button variant="destructive" disabled={isClearing} />}>
-            <IconTrash className="size-4" />
+            <Icon icon="tabler:trash" className="size-4" />
             {isClearing
               ? i18n.t("options.videoSubtitles.aiSegmentation.clearing")
               : i18n.t("options.videoSubtitles.aiSegmentation.clearCache")}

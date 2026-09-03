@@ -1,5 +1,5 @@
 import type { ComponentType, ReactNode } from "react"
-import { IconAdjustmentsHorizontal } from "@tabler/icons-react"
+import { Icon } from "@iconify/react"
 import { i18n } from "@/utils/i18n"
 import { StyleView } from "./style"
 
@@ -20,7 +20,7 @@ export const SUBPAGES: SubpageConfig[] = [
   {
     id: "style",
     title: () => i18n.t("options.videoSubtitles.style.title"),
-    icon: <IconAdjustmentsHorizontal className="size-4" />,
+    icon: <Icon icon="tabler:adjustments-horizontal" className="size-4" />,
     component: StyleView,
   },
 ]

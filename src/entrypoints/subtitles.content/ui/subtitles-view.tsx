@@ -1,4 +1,4 @@
-import { IconGripHorizontal } from "@tabler/icons-react"
+import { Icon } from "@iconify/react"
 import { useAtomValue } from "jotai"
 import { Activity } from "react"
 import { configFieldsAtomMap } from "@/utils/atoms/config"
@@ -78,7 +78,7 @@ export function SubtitlesView({ showContent }: SubtitlesViewProps) {
             ref={refs.handle}
             className="mb-0.5 cursor-grab rounded bg-black/75 px-2 py-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100 active:cursor-grabbing active:opacity-100"
           >
-            <IconGripHorizontal className="size-4 text-white" />
+            <Icon icon="tabler:grip-horizontal" className="size-4 text-white" />
           </div>
         </div>
 

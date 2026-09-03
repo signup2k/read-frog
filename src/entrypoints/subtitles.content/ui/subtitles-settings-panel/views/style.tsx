@@ -5,7 +5,7 @@ import type {
   SubtitlesTranslationPosition,
   SubtitleTextStyle,
 } from "@/types/config/subtitles"
-import { IconLanguage, IconRefresh, IconSettings, IconSubtitles } from "@tabler/icons-react"
+import { Icon } from "@iconify/react"
 import { deepmerge } from "deepmerge-ts"
 import { useAtom } from "jotai"
 import { Activity, use } from "react"
@@ -73,7 +73,7 @@ function SettingsGroup({
           onClick={onReset}
           className="cursor-pointer text-muted-foreground hover:bg-accent/60 hover:text-popover-foreground"
         >
-          <IconRefresh className="size-3.5" />
+          <Icon icon="tabler:refresh" className="size-3.5" />
         </Button>
       </div>
       <div className="divide-y divide-border rounded-xl border bg-muted/50">{children}</div>
@@ -213,7 +213,7 @@ export function StyleView() {
   return (
     <div className="min-h-[calc(100cqh-6rem)] px-3 pt-3 pb-4">
       <SettingsGroup
-        icon={<IconSettings className="size-3.5" />}
+        icon={<Icon icon="tabler:settings" className="size-3.5" />}
         title={i18n.t("options.videoSubtitles.style.generalSettings")}
         onReset={() =>
           updateStyle({
@@ -290,7 +290,7 @@ export function StyleView() {
       </SettingsGroup>
 
       <TextStyleGroup
-        icon={<IconSubtitles className="size-3.5" />}
+        icon={<Icon icon="tabler:subtitles" className="size-3.5" />}
         title={i18n.t("options.videoSubtitles.style.mainSubtitle")}
         textStyle={config.style.main}
         onChange={(patch) => updateStyle({ main: patch })}
@@ -299,7 +299,7 @@ export function StyleView() {
       />
 
       <TextStyleGroup
-        icon={<IconLanguage className="size-3.5" />}
+        icon={<Icon icon="tabler:language" className="size-3.5" />}
         title={i18n.t("options.videoSubtitles.style.translationSubtitle")}
         textStyle={config.style.translation}
         onChange={(patch) => updateStyle({ translation: patch })}

@@ -1,4 +1,4 @@
-import { IconSearch } from "@tabler/icons-react"
+import { Icon } from "@iconify/react"
 import { useSetAtom } from "jotai"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/base-ui/input-group"
 import { Kbd } from "@/components/ui/base-ui/kbd"
@@ -27,7 +27,10 @@ export function AppSidebar() {
             className="cursor-pointer"
           />
           <InputGroupAddon>
-            <IconSearch className="size-4 text-muted-foreground group-data-[state=collapsed]:-mx-px" />
+            <Icon
+              icon="tabler:search"
+              className="size-4 text-muted-foreground group-data-[state=collapsed]:-mx-px"
+            />
           </InputGroupAddon>
           <InputGroupAddon align="inline-end" className="group-data-[state=collapsed]:hidden">
             <Kbd>{commandPaletteShortcutHint}</Kbd>
