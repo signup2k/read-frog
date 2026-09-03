@@ -32,17 +32,17 @@ export function isTranslateProvider(provider: string): provider is TranslateProv
   return TRANSLATE_PROVIDER_TYPES.includes(provider)
 }
 
-export const LLM_PROVIDER_TYPES = [
-  "openai-compatible",
-] as const satisfies Readonly<(keyof typeof LLM_PROVIDER_MODELS)[]>
+export const LLM_PROVIDER_TYPES = ["openai-compatible"] as const satisfies Readonly<
+  (keyof typeof LLM_PROVIDER_MODELS)[]
+>
 export type LLMProviderTypes = (typeof LLM_PROVIDER_TYPES)[number]
 export function isLLMProvider(provider: string): provider is LLMProviderTypes {
   return LLM_PROVIDER_TYPES.includes(provider)
 }
 
-export const CUSTOM_LLM_PROVIDER_TYPES = [
-  "openai-compatible",
-] as const satisfies Readonly<(keyof typeof LLM_PROVIDER_MODELS)[]>
+export const CUSTOM_LLM_PROVIDER_TYPES = ["openai-compatible"] as const satisfies Readonly<
+  (keyof typeof LLM_PROVIDER_MODELS)[]
+>
 export type CustomLLMProviderTypes = (typeof CUSTOM_LLM_PROVIDER_TYPES)[number]
 export function isCustomLLMProvider(provider: string): provider is CustomLLMProviderTypes {
   return CUSTOM_LLM_PROVIDER_TYPES.includes(provider)

@@ -225,14 +225,7 @@ export class PageTranslationManager implements IPageTranslationManager {
         const isWalkCurrent = () => this.walkId === walkId
         if (currentConfig.translate.mode !== "translationOnly") {
           for (const target of targets) {
-            void translateWalkedElement(
-              target,
-              walkId,
-              currentConfig,
-              false,
-              pacer,
-              isWalkCurrent,
-            )
+            void translateWalkedElement(target, walkId, currentConfig, false, pacer, isWalkCurrent)
           }
           return
         }
@@ -281,7 +274,6 @@ export class PageTranslationManager implements IPageTranslationManager {
         this.initialWalkDone = null
       }
     }
-
   }
 
   stop(): void {

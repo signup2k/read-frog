@@ -114,7 +114,10 @@ export const providersConfigSchema = z
   })
 export type ProvidersConfig = z.infer<typeof providersConfigSchema>
 export type ProviderConfig = ProvidersConfig[number]
-export type NonAPIProviderConfig = Extract<ProviderConfig, { provider: "google-translate" | "microsoft-translate" }>
+export type NonAPIProviderConfig = Extract<
+  ProviderConfig,
+  { provider: "google-translate" | "microsoft-translate" }
+>
 export type PureProviderConfig = Extract<ProviderConfig, { provider: PureAPIProviderTypes }>
 export type APIProviderConfig = Extract<ProviderConfig, { provider: APIProviderTypes }>
 export type PureAPIProviderConfig = Extract<ProviderConfig, { provider: PureAPIProviderTypes }>

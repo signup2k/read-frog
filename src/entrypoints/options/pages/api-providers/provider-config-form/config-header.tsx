@@ -4,11 +4,7 @@ import { useTheme } from "@/components/providers/theme-provider"
 import { env } from "@/env"
 import { PROVIDER_ITEMS } from "@/utils/constants/providers"
 
-export function ConfigHeader({
-  providerType,
-}: {
-  providerType: APIProviderTypes
-}) {
+export function ConfigHeader({ providerType }: { providerType: APIProviderTypes }) {
   const tutorialUrl = getHowToConfigureURL(providerType)
   const { theme } = useTheme()
   const providerItem = PROVIDER_ITEMS[providerType]

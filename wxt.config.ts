@@ -18,14 +18,7 @@ export default defineConfig({
     ...(mode === "development" && {
       key: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAw2KhiXO2vySZtPu5pNSbyKhYavh8Be7gXmCZt8aJf6tQ/L3JK0qzL+3JSc/o20td3Jw+B2Dcw+EI93NAZr24xKnTNXQiJpuIuHb8xLXD0Ra/HrTVi4TJIhPdESogoG4uL6CD/F3TxfZJ2trX4Bt9cdAw1RGGeU+xU0g+YFfEka4ZUCpFAmTEw9H3/DU+nCp8yGaJWyiVgCTcFe38GZKEPt0iMJkTw956wz/iiafLx0pNG/RaztG9cAPoQOD2+SMFaeQ+b/G4OG17TYhzb09AhNBl6zSJ3jTKHSwuedCFwCce8Q/EchJfQZv71mjAE97bzwvkDYPCLj31Z5FE8HntMwIDAQAB",
     }),
-    permissions: [
-      "storage",
-      "tabs",
-      "alarms",
-      "contextMenus",
-      "scripting",
-      "webNavigation",
-    ],
+    permissions: ["storage", "tabs", "alarms", "contextMenus", "scripting", "webNavigation"],
     host_permissions: [
       "*://*/*", // Required for scripting.executeScript in any frame
     ],
@@ -80,9 +73,7 @@ export default defineConfig({
       {
         name: "check-api-key-env",
         buildStart() {
-          const apiKeyVars = Object.keys(process.env).filter((key) =>
-            WXT_API_KEY_PATTERN.test(key),
-          )
+          const apiKeyVars = Object.keys(process.env).filter((key) => WXT_API_KEY_PATTERN.test(key))
 
           if (apiKeyVars.length > 0) {
             throw new Error(

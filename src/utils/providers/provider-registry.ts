@@ -135,7 +135,12 @@ export function getSelectableProvidersForCapability(
 ): ProviderSelectorOption[] {
   const systemProviders: ProviderSelectorItem[] = Object.values(SYSTEM_PROVIDER_DEFS)
     .filter((def) => def.capabilities.includes(capability))
-    .map((def) => ({ kind: "system" as const, id: def.id, name: getSystemProviderName(def), logo: def.logo }))
+    .map((def) => ({
+      kind: "system" as const,
+      id: def.id,
+      name: getSystemProviderName(def),
+      logo: def.logo,
+    }))
 
   const localProviders = providersConfig.filter(
     (provider) =>

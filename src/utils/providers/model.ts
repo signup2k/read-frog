@@ -39,8 +39,8 @@ async function getLanguageModelById(providerId: string) {
   return provider.languageModel(modelId)
 }
 
-export async function getModelById(providerId: string): Promise<ReturnType<
-  ReturnType<typeof createOpenAICompatible>["languageModel"]
->> {
+export async function getModelById(
+  providerId: string,
+): Promise<ReturnType<ReturnType<typeof createOpenAICompatible>["languageModel"]>> {
   return getLanguageModelById(providerId)
 }

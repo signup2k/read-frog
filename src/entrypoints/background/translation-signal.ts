@@ -25,8 +25,8 @@ function notifyPageTranslationStateChanged(tabId: number, enabled: boolean) {
 }
 
 function requestManagerToTogglePageTranslation(tabId: number, enabled: boolean) {
-  void sendMessage("askManagerToTogglePageTranslation", { enabled }, tabId).catch(
-    (error) => logger.warn("Failed to ask page translation manager to toggle", error),
+  void sendMessage("askManagerToTogglePageTranslation", { enabled }, tabId).catch((error) =>
+    logger.warn("Failed to ask page translation manager to toggle", error),
   )
 }
 

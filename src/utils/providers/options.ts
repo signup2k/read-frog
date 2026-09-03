@@ -14,7 +14,6 @@ const OPENAI_COMPATIBLE_OPTION_ALIASES = {
   verbosity: "textVerbosity",
 } as const satisfies Record<string, string>
 
-
 function normalizeUserProviderOptions(
   provider: string,
   userOptions: Record<string, JSONValue>,

@@ -13,7 +13,6 @@ export const APIKeyField = withForm({
     const [showAPIKey, setShowAPIKey] = useState(false)
     const providerConfig = useSelector(form.store, (state) => state.values)
 
-
     return (
       <form.AppField name="apiKey">
         {(field) => (

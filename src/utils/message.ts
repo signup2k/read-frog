@@ -22,13 +22,8 @@ interface ProtocolMap {
   // translation state
   getEnablePageTranslationByTabId: (data: { tabId: number }) => boolean | undefined
   getEnablePageTranslationFromContentScript: () => Promise<boolean>
-  tryToSetEnablePageTranslationByTabId: (data: {
-    tabId: number
-    enabled: boolean
-  }) => void
-  tryToSetEnablePageTranslationOnContentScript: (data: {
-    enabled: boolean
-  }) => void
+  tryToSetEnablePageTranslationByTabId: (data: { tabId: number; enabled: boolean }) => void
+  tryToSetEnablePageTranslationOnContentScript: (data: { enabled: boolean }) => void
   setAndNotifyPageTranslationStateChangedByManager: (data: {
     enabled: boolean
     url?: string
@@ -44,9 +39,7 @@ interface ProtocolMap {
   getDetectedCode: () => LangCodeISO6393
   detectedPageLanguageChanged: (data: { detectedCode: LangCodeISO6393 }) => void
   // ask host to start page translation
-  askManagerToTogglePageTranslation: (data: {
-    enabled: boolean
-  }) => void
+  askManagerToTogglePageTranslation: (data: { enabled: boolean }) => void
   // user guide
   pinStateChanged: (data: { isPinned: boolean }) => void
   getPinState: () => boolean

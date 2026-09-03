@@ -50,9 +50,7 @@ export function migrate(oldConfig: any): any {
 
     if (
       next.videoSubtitles &&
-      !next.providersConfig.some(
-        (provider: any) => provider.id === next.videoSubtitles.providerId,
-      )
+      !next.providersConfig.some((provider: any) => provider.id === next.videoSubtitles.providerId)
     ) {
       next.videoSubtitles = { ...next.videoSubtitles, providerId: fallbackProviderId }
     }
