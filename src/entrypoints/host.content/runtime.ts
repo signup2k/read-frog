@@ -24,6 +24,41 @@ export async function bootstrapHostContent(
 
   const removeHostToast = window === window.top ? mountHostToast() : () => {}
 
+  // --- BookLike reader compatibility ---------------------------------------
+  // BookLike V2's reader is a dynamic about:blank iframe (id "booklike-reader")
+  // written by its own content script. It produces no navigation events, so the
+  // webNavigation-based injection path never fires, and the top frame has no
+  // translatable content left (clearPage) so the node-translation callback path
+  // never fires either. Watch for the iframe ourselves and trigger the existing
+  // injection pipeline, which does NOT require page translation to be enabled.
+  let booklikeObserver: MutationObserver | null = null
+  let requestedBooklikeInjection = false
+
+  const requestBooklikeIframeInjection = () => {
+    if (requestedBooklikeInjection) return
+    requestedBooklikeInjection = true
+    void sendMessage("injectCurrentIframesAfterTopFrameNodeTranslation", undefined).catch(
+      () => undefined,
+    )
+  }
+
+  if (window === window.top) {
+    const hasBooklikeReader = () => !!document.getElementById("booklike-reader")
+    if (hasBooklikeReader()) {
+      // reader 先于本脚本就绪的时序
+      requestBooklikeIframeInjection()
+    } else {
+      booklikeObserver = new MutationObserver(() => {
+        if (hasBooklikeReader()) {
+          requestBooklikeIframeInjection()
+          booklikeObserver?.disconnect()
+          booklikeObserver = null
+        }
+      })
+      booklikeObserver.observe(document.documentElement, { childList: true, subtree: true })
+    }
+  }
+
   const teardownNodeTranslation = registerNodeTranslationTriggers()
 
   const preloadConfig =
@@ -121,6 +156,8 @@ export async function bootstrapHostContent(
     cleanupTranslationStateListener()
     cleanupFrameTranslationStateListener()
     cleanupDetectedLanguageRefreshListener()
+    booklikeObserver?.disconnect()
+    booklikeObserver = null
     window.removeEventListener("extension:URLChange", handleExtensionUrlChange)
     window.__READ_FROG_HOST_INJECTED__ = false
     clearEffectiveSiteControlUrl()

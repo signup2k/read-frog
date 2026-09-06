@@ -734,6 +734,7 @@ options:
       description: 选择是仅翻译主要内容还是翻译页面上的所有内容。
       range:
         main: 主要内容
+        article: 正文内容
         all: 全部内容
     pageTranslationShortcut:
       title: 网页翻译快捷键

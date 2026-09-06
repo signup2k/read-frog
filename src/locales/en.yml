@@ -734,6 +734,7 @@ options:
       description: Select whether to translate only the main content or all content on the page.
       range:
         main: Main Content
+        article: Article Content
         all: All Content
     pageTranslationShortcut:
       title: Page Translation Shortcut

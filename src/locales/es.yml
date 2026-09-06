@@ -734,6 +734,7 @@ options:
       description: Selecciona si traducir solo el contenido principal o todo el contenido de la página.
       range:
         main: Contenido principal
+        article: Contenido del artículo
         all: Todo el contenido
     pageTranslationShortcut:
       title: Atajo de traducción de página

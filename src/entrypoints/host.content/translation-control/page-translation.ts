@@ -14,7 +14,7 @@ import {
   GIANT_PARAGRAPH_SPLIT_VIEWPORT_MULTIPLIER,
 } from "@/utils/constants/translate"
 import { getRandomUUID } from "@/utils/crypto-polyfill"
-import { createDOMCommitGroup } from "@/utils/host/dom/batch-dom"
+import { findMainContentContainer } from "@/utils/host/dom/article-content"
 import {
   hasNoWalkAncestor,
   isHTMLElement,
@@ -223,35 +223,16 @@ export class PageTranslationManager implements IPageTranslationManager {
         // cancels mid-flight (#1881).
         const pacer = createWorkPacer()
         const isWalkCurrent = () => this.walkId === walkId
-        if (currentConfig.translate.mode !== "translationOnly") {
-          for (const target of targets) {
-            void translateWalkedElement(target, walkId, currentConfig, false, pacer, isWalkCurrent)
-          }
-          return
-        }
-
-        // Translation-only keeps the readable source intact while providers
-        // work. Final swaps from one IntersectionObserver delivery are then
-        // staged and written in a single animation frame, so paragraphs do
-        // not visibly flip languages one request at a time.
-        const commitGroup = createDOMCommitGroup()
-        await Promise.allSettled(
-          targets.map((target) =>
-            translateWalkedElement(
-              target,
-              walkId,
-              currentConfig,
-              false,
-              pacer,
-              isWalkCurrent,
-              commitGroup,
-            ),
-          ),
-        )
-        if (isWalkCurrent()) {
-          commitGroup.commit()
-        } else {
-          commitGroup.discard()
+        // Both modes apply a paragraph as soon as its own translation returns.
+        // translationOnly once staged a delivery's final swaps in a single
+        // commitGroup so paragraphs did not flip one at a time — but that made
+        // a whole viewport wait for its slowest request, then jump at once,
+        // which read as "translate everything, then replace the page". Applying
+        // per-paragraph instead is progressive; the in-place swap already
+        // guards host mutations (verifySourceSnapshot) and cancel/restart
+        // (the wrapper-connection check + session-scoped request cancel).
+        for (const target of targets) {
+          void translateWalkedElement(target, walkId, currentConfig, false, pacer, isWalkCurrent)
         }
       })()
     }, this.intersectionOptions)
@@ -264,7 +245,18 @@ export class PageTranslationManager implements IPageTranslationManager {
 
     // Label existing elements in time-sliced chunks (walkability caching is
     // handled by the walk's onBlockedElement callback).
-    const initialWalk = this.observeTopLevelParagraphs(document.body, config, { chunked: true })
+    let container = document.body
+    if (config.translate.page.range === "article") {
+      const mainContainer = findMainContentContainer(document)
+      if (mainContainer) {
+        container = mainContainer
+        logger.info("Article mode: using main content container", mainContainer)
+      } else {
+        logger.info("Article mode: no main content container found, falling back to body walk")
+      }
+    }
+
+    const initialWalk = this.observeTopLevelParagraphs(container, config, { chunked: true })
     this.initialWalkDone = initialWalk
     try {
       await initialWalk

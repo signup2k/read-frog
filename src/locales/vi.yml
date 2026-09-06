@@ -619,6 +619,7 @@ options:
       description: Chọn chỉ dịch nội dung chính hay tất cả nội dung trên trang.
       range:
         main: Nội dung chính
+        article: Nội dung bài viết
         all: Tất cả nội dung
     pageTranslationShortcut:
       title: Phím tắt dịch trang

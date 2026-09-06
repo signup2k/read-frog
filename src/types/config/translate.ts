@@ -32,7 +32,7 @@ export const batchQueueConfigSchema = z.object({
 export const TRANSLATION_MODES = ["bilingual", "translationOnly"] as const
 export const translationModeSchema = z.enum(TRANSLATION_MODES)
 
-export const pageTranslateRangeSchema = z.enum(["main", "all"])
+export const pageTranslateRangeSchema = z.enum(["main", "article", "all"])
 export type PageTranslateRange = z.infer<typeof pageTranslateRangeSchema>
 
 export const preloadConfigSchema = z.object({

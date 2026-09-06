@@ -619,6 +619,7 @@ options:
       description: 페이지의 주요 내용만 번역할지 모든 내용을 번역할지 선택합니다.
       range:
         main: 주요 내용
+        article: 기사 콘텐츠
         all: 전체 내용
     pageTranslationShortcut:
       title: 페이지 번역 단축키

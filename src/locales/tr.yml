@@ -619,6 +619,7 @@ options:
       description: Sayfadaki yalnızca ana içeriğin mi yoksa tüm içeriğin mi çevrileceğini seçin.
       range:
         main: Ana İçerik
+        article: Makale İçeriği
         all: Tüm İçerik
     pageTranslationShortcut:
       title: Sayfa Çeviri Kısayolu

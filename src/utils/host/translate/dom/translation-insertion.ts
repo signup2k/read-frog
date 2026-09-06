@@ -1,5 +1,5 @@
 import type { Config } from "@/types/config/config"
-import type { TranslationNodeStyleConfig } from "@/types/config/translate"
+import type { TranslationNodeStyleConfig, TranslationTextFormat } from "@/types/config/translate"
 import type { TransNode } from "@/types/dom"
 import {
   BLOCK_CONTENT_CLASS,
@@ -97,6 +97,7 @@ export async function insertTranslatedNodeIntoWrapper(
   translatedWrapperNode: HTMLElement,
   { flowSource, layoutSource, sourceText, isCurrent }: TranslationInsertionContext,
   translatedText: string,
+  translatedTextFormat: TranslationTextFormat,
   translationNodeStyle: TranslationNodeStyleConfig,
   config: Config,
   forceBlockTranslation: boolean = false,
@@ -137,7 +138,15 @@ export async function insertTranslatedNodeIntoWrapper(
     return
   }
 
-  translatedNode.textContent = translatedText
+  // HTML is only used by callers that have run the protected-attribute
+  // pipeline and restored its markers. Keep plain as the safe default so a
+  // provider response is never interpreted as markup accidentally.
+  if (translatedTextFormat === "html") {
+    // pi-lens-ignore: ast-grep:no-inner-html
+    translatedNode.innerHTML = translatedText
+  } else {
+    translatedNode.textContent = translatedText
+  }
   translatedWrapperNode.appendChild(translatedNode)
   await decorateTranslationNode(translatedNode, translationNodeStyle)
 

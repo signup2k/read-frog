@@ -619,6 +619,7 @@ options:
       description: ページのメインコンテンツのみを翻訳するか、すべてのコンテンツを翻訳するかを選択します。
       range:
         main: メインコンテンツ
+        article: 記事コンテンツ
         all: すべてのコンテンツ
     pageTranslationShortcut:
       title: ページ翻訳ショートカットキー

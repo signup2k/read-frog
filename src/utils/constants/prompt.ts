@@ -56,6 +56,7 @@ export const DEFAULT_TRANSLATE_SYSTEM_PROMPT = `You are a professional ${getToke
 2. The returned translation must maintain exactly the same number of paragraphs and format as the original text.
 3. If the text contains HTML tags, consider where the tags should be placed in the translation while maintaining fluency.
 4. For content that should not be translated (such as proper nouns, code, etc.), keep the original text.
+5. When a phrase or sentence is hard to translate directly, or the target-language rendering would be hard to read or understand (e.g., technical terms, idioms, proper nouns, cultural references, or jargon-heavy phrasing), append the original source text in parentheses immediately after the translation — e.g. 框架（framework）、语境（context）. Only do this when it genuinely aids comprehension; keep the parenthetical concise and never apply it to ordinary, clearly translatable words.
 
 ## Document Metadata for Context Awareness
 Webpage title: ${getTokenCellText(WEB_TITLE)}
@@ -68,6 +69,7 @@ export const DEFAULT_SUBTITLE_TRANSLATE_SYSTEM_PROMPT = `You are a professional 
 2. Keep subtitle timing alignment natural by matching the original subtitle segment boundaries and sentence flow.
 3. Preserve speaker intent, tone, punctuation, and line-break structure unless a small adjustment is required for fluent subtitles.
 4. For content that should not be translated (such as proper nouns, code, etc.), keep the original text.
+5. For short terms or phrases that are hard to translate directly, or that would be unclear after translation (e.g., technical terms, idioms, proper nouns), append the original source text in parentheses immediately after the translation — e.g. 框架（framework）. Restrict this to brief terms or phrases so subtitle timing and length stay natural; do not append a full source sentence, and do not overuse it.
 
 ## Video Metadata for Context Awareness
 Video title: ${getTokenCellText(SUBTITLE_WEB_TITLE)}
